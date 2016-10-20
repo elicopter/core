@@ -14,7 +14,7 @@ Run locally:
 iex -S mix
 ```
   
-Or burn the firmware for Rapsberry Pi 3:
+Or create an image for Rapsberry Pi 3:
 ```
 MIX_ENV=prod mix firmware
 ```
