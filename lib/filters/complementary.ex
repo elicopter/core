@@ -11,7 +11,8 @@ defmodule Filter.Complementary do
         roll: 0,
         pitch: 0,
         yaw: 0,
-        alpha: 0.995
+        alpha: 0.995,
+        roll_offset: 0
       }
     }
   end
@@ -30,12 +31,16 @@ defmodule Filter.Complementary do
     {:reply,
       {
         :ok, %{
-          roll: new_state[:roll],
+          roll: new_state[:roll] + state[:roll_offset],
           pitch: new_state[:pitch],
           yaw: new_state[:yaw]
         }
       }, Map.merge(state, new_state)
     }
+  end
+
+  def handle_cast({:offset, :roll, value}, state) do
+    {:noreply, %{state | roll_offset: value}}
   end
 
   def start_link(name \\ :complementary_ilter) do
@@ -45,5 +50,9 @@ defmodule Filter.Complementary do
 
   def update(gyroscope, accelerometer, pid \\ :filter) do
     GenServer.call(pid, {:update, gyroscope, accelerometer})
+  end
+
+  def offset(axis, value, pid \\ :filter) do
+    GenServer.cast(pid, {:offset, axis, value})
   end
 end
