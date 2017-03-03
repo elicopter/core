@@ -4,6 +4,7 @@
 /deps
 /*.ez
 /rel
+!rel/vm.args
 # Nerves images
 /_images
 
