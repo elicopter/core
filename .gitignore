@@ -3,8 +3,7 @@
 /db
 /deps
 /*.ez
-/rel
-!rel/vm.args
+/rel/core
 # Nerves images
 /_images
 
