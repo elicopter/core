@@ -20,13 +20,16 @@ defmodule Core.Mixfile do
     [
       mod: {Core, []},
       applications: [
+        :runtime_tools,
         :nerves,
+        :nerves_networking,
         :nerves_interim_wifi,
         :nerves_uart,
         :logger,
         :apex,
         :amqp,
-        :poison
+        :poison,
+        :elixir_ale
       ]
     ]
   end
@@ -36,7 +39,8 @@ defmodule Core.Mixfile do
       {:nerves, "~> 0.3"},
       {:nerves_uart, git: "https://github.com/nerves-project/nerves_uart.git"},
       {:nerves_interim_wifi, "~> 0.1.0"},
-      {:elixir_ale, "0.5.5"},
+      {:nerves_networking, github: "nerves-project/nerves_networking"},
+      {:elixir_ale, "0.5.7"},
       {:apex, ">= 0.0.0"},
       {:combine, ">= 0.0.0"},
       {:amqp, github: "loicvigneron/amqp"},

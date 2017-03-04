@@ -13,14 +13,14 @@ defmodule Brain do
 
   def init(_) do
     # TODO implement reverse on pids
-    # :ok = PIDController.configure({0.7, 0, 0, -500, 500}, :roll_rate_pid_controller)
-    # :ok = PIDController.configure({0.7, 0, 0, -500, 500}, :pitch_rate_pid_controller)
-    # :ok = PIDController.configure({3.5, 0, 0, -500, 500}, :yaw_rate_pid_controller)
+    :ok = PIDController.configure({0.7, 0, 0, -500, 500}, :roll_rate_pid_controller)
+    :ok = PIDController.configure({0.7, 0, 0, -500, 500}, :pitch_rate_pid_controller)
+    :ok = PIDController.configure({3.5, 0, 0, -500, 500}, :yaw_rate_pid_controller)
 
-    # :ok = PIDController.configure({1.9, 0, 0, -400, 400}, :roll_angle_pid_controller)
-    # :ok = PIDController.configure({-1.9, 0, 0, -400, 400}, :pitch_angle_pid_controller)
+    :ok = PIDController.configure({1.9, 0, 0, -400, 400}, :roll_angle_pid_controller)
+    :ok = PIDController.configure({-1.9, 0, 0, -400, 400}, :pitch_angle_pid_controller)
 
-    # :timer.send_interval(@sample_rate, :loop)
+    :timer.send_interval(@sample_rate, :loop)
     {:ok, %{
       complete_last_loop_duration: nil,
       last_end_timestamp: nil,
