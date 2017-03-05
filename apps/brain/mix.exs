@@ -36,7 +36,8 @@ defmodule Brain.Mixfile do
         :apex,
         :poison,
         :elixir_ale,
-        :api
+        :api,
+        :drivers
       ]
     ]
   end
@@ -44,6 +45,7 @@ defmodule Brain.Mixfile do
   def deps do
     [
       {:api, in_umbrella: true},
+      {:drivers, in_umbrella: true},
       {:nerves, "~> 0.4.0"},
       {:nerves_uart, git: "https://github.com/nerves-project/nerves_uart.git"},
       {:nerves_interim_wifi, "~> 0.1.0"},

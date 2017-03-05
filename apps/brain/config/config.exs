@@ -20,4 +20,8 @@ config :brain, :filter, Filter.Complementary
 
 config :brain, :sample_rate, 30
 
+
+config :drivers, :pca9685,
+  bus_name: "i2c-1",
+  address: 0x40
 import_config "#{Mix.env}.exs"
