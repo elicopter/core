@@ -26,19 +26,7 @@ defmodule Brain.Mixfile do
   def application do
     [
       mod: {Brain, []},
-      applications: [
-        :runtime_tools,
-        :nerves,
-        :nerves_networking,
-        :nerves_interim_wifi,
-        :nerves_uart,
-        :logger,
-        :apex,
-        :poison,
-        :elixir_ale,
-        :api,
-        :drivers
-      ]
+      applications: applications(Mix.env)
     ]
   end
 
@@ -48,9 +36,9 @@ defmodule Brain.Mixfile do
       {:drivers, in_umbrella: true},
       {:nerves, "~> 0.4.0"},
       {:nerves_uart, git: "https://github.com/nerves-project/nerves_uart.git"},
-      {:nerves_interim_wifi, "~> 0.1.0"},
+      {:nerves_interim_wifi, "~> 0.1.0", only: [:prod]},
       {:nerves_networking, github: "nerves-project/nerves_networking"},
-      {:elixir_ale, "0.5.7"},
+      {:elixir_ale, "0.5.7", only: [:prod]},
       {:apex, ">= 0.0.0"},
       {:combine, ">= 0.0.0"},
       {:poison, ">= 0.0.0"},
@@ -69,4 +57,25 @@ defmodule Brain.Mixfile do
     ]
   end
 
+  defp applications(:prod) do
+    [:nerves_interim_wifi, :elixir_ale | base_applications]
+  end
+
+  defp applications(_) do
+    base_applications
+  end
+
+  defp base_applications do
+    [
+      :runtime_tools,
+      :nerves,
+      :nerves_networking,
+      :nerves_uart,
+      :logger,
+      :apex,
+      :poison,
+      :api,
+      :drivers
+    ]
+  end
 end

@@ -31,35 +31,35 @@ defmodule Driver.PCA9685 do
       acc <> zero <> << value::little-16 >>
     end
     data = Enum.reduce(values, << @led0_on_l_register >>, reducer)
-    I2c.write_device(i2c_pid, @i2c_address, data)
+    @i2c.write_device(i2c_pid, @i2c_address, data)
     {:reply, :ok, state}
   end
 
   def handle_call({:write, number, start_value, end_value}, _from, %{i2c_pid: i2c_pid} = state) do
     register_address = << @led0_on_l_register + 4 * number >>
     data = register_address <> << start_value::little-16 >> <> << end_value::little-16 >>
-    I2c.write_device(i2c_pid, @i2c_address, data)
+    @i2c.write_device(i2c_pid, @i2c_address, data)
     {:reply, :ok, state}
   end
 
   defp set_prescale(i2c_pid) do
     # Reset
-    I2c.write_device(i2c_pid, @i2c_address, <<@mode_1_register, 0x00>>)
+    @i2c.write_device(i2c_pid, @i2c_address, <<@mode_1_register, 0x00>>)
     Process.sleep(5)
     # Read mode
-    <<mode :: unsigned-8>> = I2c.read_device(i2c_pid, @i2c_address, 1)
+    <<mode :: unsigned-8>> = @i2c.read_device(i2c_pid, @i2c_address, 1)
     # Set sleep mode
     sleep_mode = (mode &&& 0x7F) ||| 0x10
-    I2c.write_device(i2c_pid, @i2c_address, <<@mode_1_register, sleep_mode>>)
+    @i2c.write_device(i2c_pid, @i2c_address, <<@mode_1_register, sleep_mode>>)
     # Write prescale
     prescale = round((25 * 1000 * 1000) / (4096 * @frequency)) - 1
-    I2c.write_device(i2c_pid, @i2c_address, <<@prescale_register, prescale>>)
+    @i2c.write_device(i2c_pid, @i2c_address, <<@prescale_register, prescale>>)
     # Reset mode
-    I2c.write_device(i2c_pid, @i2c_address, <<@mode_1_register, mode>>)
+    @i2c.write_device(i2c_pid, @i2c_address, <<@mode_1_register, mode>>)
     Process.sleep(5)
     # Set auto increment
     new_mode = mode |||  0xa1
-    I2c.write_device(i2c_pid, @i2c_address, <<@mode_1_register, new_mode>>)
+    @i2c.write_device(i2c_pid, @i2c_address, <<@mode_1_register, new_mode>>)
   end
 
   def write(number, start_value, end_value, pid \\ :pca9685) do
