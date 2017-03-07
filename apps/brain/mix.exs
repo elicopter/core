@@ -20,9 +20,6 @@ defmodule Brain.Mixfile do
     ]
   end
 
-  # Configuration for the OTP application.
-  #
-  # Type `mix help compile.app` for more information.
   def application do
     [
       mod: {Brain, []},
@@ -58,11 +55,11 @@ defmodule Brain.Mixfile do
   end
 
   defp applications(:prod) do
-    [:nerves_interim_wifi, :elixir_ale | base_applications]
+    [:nerves_interim_wifi, :elixir_ale | base_applications()]
   end
 
   defp applications(_) do
-    base_applications
+    base_applications()
   end
 
   defp base_applications do
