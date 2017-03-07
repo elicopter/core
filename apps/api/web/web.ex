@@ -32,7 +32,6 @@ defmodule Api.Web do
   def channel do
     quote do
       use Phoenix.Channel
-      import Api.Gettext
     end
   end
 

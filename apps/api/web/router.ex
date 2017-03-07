@@ -8,6 +8,6 @@ defmodule Api.Router do
   scope "/", Api do
     pipe_through :api
 
-    get "/", PageController, :index
+    get "/", HomeController, :index
   end
 end
