@@ -11,34 +11,63 @@ config :brain, :wifi_configuration,
   interface: "wlan0",
   key_mgmt: :"WPA-PSK"
 
-config :brain, :barometer, Sensor.BMP180
-config :brain, :magnetometer, Sensor.LSM303DLHCMagnetometer
-config :brain, :accelerometer, Sensor.LSM303DLHCAccelerometer
-config :brain, :gyroscope, Sensor.L3GD20H
-
 config :brain, :filter, Filter.Complementary
 
 config :brain, :sample_rate, 30
 
-config :drivers, :pca9685,
+config :brain, :sensors, [
+  Brain.Sensors.Barometer,
+  Brain.Sensors.Magnetometer,
+  Brain.Sensors.Accelerometer,
+  Brain.Sensors.Gyroscope
+]
+
+config :brain, Brain.Sensors.Gyroscope,
+  driver: Drivers.L3GD20H
+
+config :brain, Brain.Sensors.Accelerometer,
+  driver: Drivers.LSM303DLHCAccelerometer
+
+config :brain, Brain.Sensors.Magnetometer,
+  driver: Drivers.LSM303DLHCMagnetometer
+
+config :brain, Brain.Sensors.Barometer,
+  driver: Drivers.BMP180
+
+config :brain, :actuators, [
+  Brain.Actuators.Motors
+]
+
+config :brain, Brain.Actuators.Motors,
+  driver: Drivers.PCA9685
+
+config :brain, Drivers.PCA9685,
   bus: :i2c,
   bus_name: "i2c-1",
   address: 0x40
 
-config :drivers, :bmp180,
+config :brain, Drivers.BMP180,
   bus: :i2c,
   bus_name: "i2c-1",
   address: 0x77
 
-config :drivers, :lsm303dlhc,
+config :brain, Drivers.LSM303DLHCAccelerometer,
   bus: :i2c,
   bus_name: "i2c-1",
-  accelerometer_address: 0x19
-  magnetometer_address: 0x1E
+  address: 0x19
 
-config :drivers, :l3gd20h,
+config :brain, Drivers.LSM303DLHCMagnetometer,
+  bus: :i2c,
+  bus_name: "i2c-1",
+  address: 0x1E
+
+config :brain, Drivers.L3GD20H,
   bus: :i2c,
   bus_name: "i2c-1",
   address: 0x6B
+
+config :brain, Drivers.IBus,
+  bus: :uart,
+  bus_name: "ttyS0"
 
 import_config "#{Mix.env}.exs"

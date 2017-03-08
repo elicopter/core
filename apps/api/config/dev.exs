@@ -11,8 +11,7 @@ config :api, Api.Endpoint,
 config :api, Api.Endpoint,
   live_reload: [
     patterns: [
-      ~r{web/views/.*(ex)$},
-      ~r{web/templates/.*(eex)$}
+      ~r{web/.*(ex)$}
     ]
   ]
 

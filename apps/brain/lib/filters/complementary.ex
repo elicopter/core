@@ -17,6 +17,11 @@ defmodule Filter.Complementary do
     }
   end
 
+  def start_link(opts) do
+    Logger.debug "Starting #{__MODULE__}..."
+    GenServer.start_link(__MODULE__, [], opts)
+  end
+
   def handle_call({:update, gyroscope_data, accelerometer_data}, _from, state) do
     pitch_accelerometer = :math.atan2(accelerometer_data[:y], accelerometer_data[:z]) * 180 / @pi
     roll_accelerometer  = :math.atan2(-accelerometer_data[:x], accelerometer_data[:z]) * 180 / @pi
@@ -41,11 +46,6 @@ defmodule Filter.Complementary do
 
   def handle_cast({:offset, :roll, value}, state) do
     {:noreply, %{state | roll_offset: value}}
-  end
-
-  def start_link(name \\ :complementary_ilter) do
-    Logger.debug "Starting #{__MODULE__}..."
-    GenServer.start_link(__MODULE__, nil, name: name)
   end
 
   def update(gyroscope, accelerometer, pid \\ :filter) do

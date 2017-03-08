@@ -11,6 +11,17 @@ defmodule Drivers.Common do
         Application.get_env(:drivers, :i2c)
       end
 
+      def uart() do
+        Application.get_env(:drivers, :uart)
+      end
+
+      def handle_call(:configuration, _from, state) do
+        %{
+          module: __MODULE__,
+        }
+        {:reply, {:ok, __MODULE__}, state}
+      end
+
       # TODO: Refactor
       def read_at(type, pid, i2c_address, address \\ nil) do
         unless address == nil, do: i2c().write_device(pid, i2c_address, <<address>>)

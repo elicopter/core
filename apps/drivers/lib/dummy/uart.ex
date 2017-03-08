@@ -8,9 +8,10 @@ defmodule Drivers.Dummy.UART do
   end
 
   def open(_, _, _) do
-
+    :ok
   end
 
   def configure(_, _) do
+    :ok
   end
 end
