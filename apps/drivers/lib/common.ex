@@ -5,6 +5,10 @@ defmodule Drivers.Common do
       alias Drivers.State
       use GenServer
       use Bitwise
+
+      def i2c() do
+        Application.get_env(:drivers, :i2c)
+      end
     end
   end
 end

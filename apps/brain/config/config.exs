@@ -25,4 +25,20 @@ config :drivers, :pca9685,
   bus_name: "i2c-1",
   address: 0x40
 
+config :drivers, :bmp180,
+  bus: :i2c,
+  bus_name: "i2c-1",
+  address: 0x77
+
+config :drivers, :lsm303dlhc,
+  bus: :i2c,
+  bus_name: "i2c-1",
+  accelerometer_address: 0x19
+  magnetometer_address: 0x1E
+
+config :drivers, :l3gd20h,
+  bus: :i2c,
+  bus_name: "i2c-1",
+  address: 0x6B
+
 import_config "#{Mix.env}.exs"
