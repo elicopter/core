@@ -79,6 +79,8 @@ defmodule Drivers.Dummy.I2c do
     case state do
       %{name: _, address: _, register_address: 0x0F} ->
         {:reply, <<0xD7>>, state}
+      %{name: _, address: 119, register_address: 0xD0} ->
+        {:reply, "12", state}
       %{name: _, address: _, register_address: 0xD0} ->
         {:reply, <<0x55>>, state}
       %{name: _, address: _, register_address: 0x00} ->

@@ -28,12 +28,11 @@ defmodule Drivers.BMP180 do
 
   def init([bus_pid, configuration]) do
     validate_i2c_device!(bus_pid)
-    calibration_data = read_calibration_data(bus_pid)
     {:ok, %State{
         bus_pid: bus_pid,
         configuration: configuration,
         mode: @ultrahigh_resolution_mode,
-        calibration_data: calibration_data
+        calibration_data: read_calibration_data(bus_pid)
       }
     }
   end
@@ -43,7 +42,7 @@ defmodule Drivers.BMP180 do
     GenServer.start_link(__MODULE__, [bus_pid, configuration], opts)
   end
 
-  def handle_call(:read, _from, %State{calibration_data: calibration_data, mode: mode}) do
+  def handle_call(:read, _from, %State{calibration_data: calibration_data, mode: mode}= state) do
     ut               = read_uncompensated_temperature(state)
     up               = read_uncompensated_pressure(state)
     temperature_data = compute_temperature(ut, calibration_data)
@@ -81,7 +80,7 @@ defmodule Drivers.BMP180 do
     read_at(:unsigned_24, bus_pid, @pressure_data_register) >>> 8 - mode
   end
 
-  defp read_uncompensated_temperature(%State{bus_pid: bus_pid, mode: mode}) do
+  defp read_uncompensated_temperature(%State{bus_pid: bus_pid}) do
     i2c().write(bus_pid, <<@measurement_control_register, @read_temperature_command>>)
     :timer.sleep(5)
     read_at(:unsigned_16, bus_pid, @temperature_data_register)

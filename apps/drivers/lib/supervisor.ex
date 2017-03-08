@@ -6,20 +6,20 @@ defmodule Drivers.Supervisor do
     Supervisor.start_link(__MODULE__, [driver_module])
   end
 
-  def init([driver_name]) do
-    driver_module   = Module.concat(Module.concat("Elixir", "Drivers"), driver_name)
+  def init([driver_module]) do
     driver_bus_name = Module.concat(driver_module, "Bus")
-    configuration   = driver_configuration(driver_name)
+    configuration   = driver_configuration(driver_module)
     children = [
       worker(bus_module(configuration[:bus]), [configuration[:bus_name], configuration[:address] || 0x00, [name: driver_bus_name]]),
       worker(driver_module, [driver_bus_name, configuration, [name: driver_module]])
     ]
-    Logger.debug "Starting #{driver_name} as #{driver_module}..."
+    Logger.debug "Starting #{driver_module}..."
     supervise(children, strategy: :one_for_one)
   end
 
-  def driver_configuration(driver_name) do
-    Application.get_env(:drivers, driver_name |> String.downcase |> String.to_existing_atom)
+  def driver_configuration(driver_module) do
+    driver_configuration_key = Application.get_env(:drivers, driver_module)[:configuration]
+    Application.get_env(:drivers, driver_configuration_key)
   end
 
   def bus_module(bus) do

@@ -38,7 +38,7 @@ defmodule Drivers.PCA9685 do
     i2c().write(bus_pid, <<@mode_1_register, 0x00>>)
     Process.sleep(5)
     # Read mode
-    <<mode :: unsigned-8>> = i2c().read_device(bus_pid, 1)
+    <<mode :: unsigned-8>> = i2c().read(bus_pid, 1)
     # Set sleep mode
     sleep_mode = (mode &&& 0x7F) ||| 0x10
     i2c().write(bus_pid, <<@mode_1_register, sleep_mode>>)
