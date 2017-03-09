@@ -24,12 +24,12 @@ defmodule Brain do
       worker(PIDController, [:roll_angle_pid_controller], [id: :roll_angle_pid_controller]),
 
       worker(Interpreter, []),
-      worker(Mixer, []),
+      worker(Mixer, [])
 
       # worker(BlackBox, [:black_box]),
       # worker(Commander, [:commander]),
 
-      worker(Loop, [])
+      #worker(Loop, [])
     ]
     opts = [strategy: :one_for_one, name: Core.Supervisor]
     Supervisor.start_link(children, opts)

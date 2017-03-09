@@ -1,4 +1,4 @@
 use Mix.Config
 
 config :drivers, :i2c, I2c
-config :drivers, :uart, UART
+config :drivers, :uart, Nerves.UART
