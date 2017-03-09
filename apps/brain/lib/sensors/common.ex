@@ -8,6 +8,14 @@ defmodule Sensors.Common do
         }
         {:reply, configuration, state}
       end
+
+      def handle_call(:read, _from, %{driver_pid: driver_pid} = state) do
+        {:reply, GenServer.call(driver_pid, :read), state}
+      end
+
+      def read() do
+        GenServer.call(__MODULE__, :read)
+      end
     end
   end
 end

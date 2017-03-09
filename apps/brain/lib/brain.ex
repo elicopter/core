@@ -23,8 +23,8 @@ defmodule Brain do
       worker(PIDController, [:pitch_angle_pid_controller], [id: :pitch_angle_pid_controller]),
       worker(PIDController, [:roll_angle_pid_controller], [id: :roll_angle_pid_controller]),
 
-      # worker(Interpreter, []),
-      # worker(Mixer, []),
+      worker(Interpreter, []),
+      worker(Mixer, []),
 
       # worker(BlackBox, [:black_box]),
       # worker(Commander, [:commander]),

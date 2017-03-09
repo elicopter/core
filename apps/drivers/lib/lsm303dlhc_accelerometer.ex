@@ -29,7 +29,7 @@ defmodule Drivers.LSM303DLHCAccelerometer do
       y: (y >>> 4) * @sensitivity,
       z: (z >>> 4) * @sensitivity
     }
-    {:reply, data, state}
+    {:reply, {:ok, data}, state}
   end
 
   defp validate_i2c_device!(bus_pid) do

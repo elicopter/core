@@ -3,8 +3,12 @@ defmodule Api.SensorsController do
 
   def index(conn, _params) do
     sensors = Brain.Sensors.Supervisor.registered_sensors() |> Enum.map(fn sensor ->
+      {:ok, value} = GenServer.call(sensor, :read)
+      IO.inspect value
       %{
-        configuration: GenServer.call(sensor, :configuration)
+        name:          sensor,
+        configuration: GenServer.call(sensor, :configuration),
+        value:         value
       }
     end)
     render conn, "index.json", %{sensors: sensors}

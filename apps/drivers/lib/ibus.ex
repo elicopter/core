@@ -21,11 +21,11 @@ defmodule Drivers.IBus do
   end
 
   def handle_call(:read, _from, %{got_partial_frame: false, channels: channels} = state) do
-    {:reply, channels, state}
+    {:reply, {:ok, channels}, state}
   end
 
   def handle_call(:read, _from, %{got_partial_frame: true} = state) do
-    {:reply, nil, state}
+    {:reply, {:ok, nil}, state}
   end
 
   def handle_info({:nerves_uart, "ttyS0", {:partial, partial_frame}}, state) do

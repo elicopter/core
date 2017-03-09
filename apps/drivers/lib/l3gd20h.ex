@@ -32,7 +32,7 @@ defmodule Drivers.L3GD20H do
       y: y * @sensitivity,
       z: z * @sensitivity
     }
-    {:reply, data, state}
+    {:reply, {:ok, data}, state}
   end
 
   defp validate_i2c_device!(bus_pid) do

@@ -33,7 +33,7 @@ defmodule Drivers.LSM303DLHCMagnetometer do
       y: y / @x_y_gain * @gauss_to_micro_tesla_multiplier,
       z: z / @z_gain * @gauss_to_micro_tesla_multiplier
     }
-    {:reply, data, state}
+    {:reply, {:ok, data}, state}
   end
 
   defp validate_i2c_device!(bus_pid) do

@@ -16,7 +16,7 @@ config :brain, :filter, Filter.Complementary
 config :brain, :sample_rate, 30
 
 config :brain, :sensors, [
-  Brain.Sensors.Barometer,
+  # Brain.Sensors.Barometer, # Need to be fixed
   Brain.Sensors.Magnetometer,
   Brain.Sensors.Accelerometer,
   Brain.Sensors.Gyroscope
@@ -68,6 +68,6 @@ config :brain, Drivers.L3GD20H,
 
 config :brain, Drivers.IBus,
   bus: :uart,
-  bus_name: "ttyS0"
+  bus_name: "ttyUSB0"
 
 import_config "#{Mix.env}.exs"

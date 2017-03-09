@@ -54,7 +54,7 @@ defmodule Drivers.BMP180 do
       temperature: temperature_data[:t] * 0.1,
       pressure: pressure
     }
-    {:reply, data, state}
+    {:reply, {:ok, data}, state}
   end
 
   defp read_calibration_data(bus_pid) do
