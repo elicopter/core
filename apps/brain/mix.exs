@@ -40,7 +40,8 @@ defmodule Brain.Mixfile do
       {:combine, ">= 0.0.0"},
       {:poison, ">= 0.0.0"},
       {:credo, "~> 0.4", only: [:dev, :test]},
-      {:nerves_firmware_http, github: "nerves-project/nerves_firmware_http"}
+      {:nerves_firmware_http, github: "nerves-project/nerves_firmware_http"},
+      {:httpoison, "~> 0.11.0"}
     ]
   end
 

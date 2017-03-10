@@ -7,6 +7,9 @@ config :nerves_interim_wifi,
 
 config :brain, :environment, Mix.env
 
+config :brain, :firmware_http,
+  url: "http://elicopter:8988"
+
 config :brain, :wifi_configuration,
   ssid: "elicopter",
   psk: "elicopter2016",
