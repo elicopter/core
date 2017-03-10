@@ -16,18 +16,18 @@ defmodule Brain do
       supervisor(Brain.Actuators.Supervisor, []),
       supervisor(Drivers.Supervisor, [Drivers.IBus, Application.get_env(:brain, Drivers.IBus)], [id: Drivers.IBus]),
       worker(Brain.Receiver, [Drivers.IBus]),
-      worker(@filter, [[name: :filter]]),
+      worker(@filter, []),
 
-      worker(Brain.PIDController, [[name: :roll_rate_pid_controller]], [id: :roll_rate_pid_controller]),
-      worker(Brain.PIDController, [[name: :pitch_rate_pid_controller]], [id: :pitch_rate_pid_controller]),
-      worker(Brain.PIDController, [[name: :yaw_rate_pid_controller]], [id: :yaw_rate_pid_controller]),
-      worker(Brain.PIDController, [[name: :pitch_angle_pid_controller]], [id: :pitch_angle_pid_controller]),
-      worker(Brain.PIDController, [[name: :roll_angle_pid_controller]], [id: :roll_angle_pid_controller]),
+      worker(Brain.PIDController, [[name: Brain.RollRatePIDController]], [id: Brain.RollRatePIDController]),
+      worker(Brain.PIDController, [[name: Brain.PitchRatePIDController]], [id: Brain.PitchRatePIDController]),
+      worker(Brain.PIDController, [[name: Brain.YawRatePIDController]], [id: Brain.YawRatePIDController]),
+      worker(Brain.PIDController, [[name: Brain.PitchAnglePIDController]], [id: Brain.PitchAnglePIDController]),
+      worker(Brain.PIDController, [[name: Brain.RollAnglePIDController]], [id: Brain.RollAnglePIDController]),
 
       worker(Brain.Interpreter, []),
       worker(Brain.Mixer, []),
 
-      # worker(BlackBox, [:black_box]),
+      worker(Brain.BlackBox, []),
       # worker(Commander, [:commander]),
 
       worker(Brain.Loop, [])

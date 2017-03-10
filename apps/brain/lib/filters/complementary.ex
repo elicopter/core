@@ -17,9 +17,9 @@ defmodule Filter.Complementary do
     }
   end
 
-  def start_link(opts) do
+  def start_link() do
     Logger.debug "Starting #{__MODULE__}..."
-    GenServer.start_link(__MODULE__, [], opts)
+    GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
   def handle_call({:update, gyroscope_data, accelerometer_data}, _from, state) do
@@ -48,11 +48,11 @@ defmodule Filter.Complementary do
     {:noreply, %{state | roll_offset: value}}
   end
 
-  def update(gyroscope, accelerometer, pid \\ :filter) do
-    GenServer.call(pid, {:update, gyroscope, accelerometer})
+  def update(gyroscope, accelerometer) do
+    GenServer.call(__MODULE__, {:update, gyroscope, accelerometer})
   end
 
-  def offset(axis, value, pid \\ :filter) do
-    GenServer.cast(pid, {:offset, axis, value})
+  def offset(axis, value) do
+    GenServer.cast(__MODULE__, {:offset, axis, value})
   end
 end

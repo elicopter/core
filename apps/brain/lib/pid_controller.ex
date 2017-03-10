@@ -114,7 +114,6 @@ defmodule Brain.PIDController do
 
   defp trace(state, error, output, proportional_term, integrative_term, derivative_term) do
     data = %{
-      name: Process.info(self())[:registered_name],
       kp: state[:raw_kp],
       ki: state[:raw_ki],
       kd: state[:raw_kd],

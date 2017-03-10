@@ -8,6 +8,9 @@ config :nerves_interim_wifi,
 
 config :brain, :environment, Mix.env
 
+config :brain, Brain.BlackBox,
+  buffer_limit: 30
+
 config :brain, :firmware_http,
   url: "http://elicopter:8988"
 
