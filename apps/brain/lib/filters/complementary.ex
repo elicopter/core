@@ -11,8 +11,7 @@ defmodule Filter.Complementary do
         roll: 0,
         pitch: 0,
         yaw: 0,
-        alpha: 0.995,
-        roll_offset: 0
+        alpha: 0.99
       }
     }
   end
@@ -36,7 +35,7 @@ defmodule Filter.Complementary do
     {:reply,
       {
         :ok, %{
-          roll: new_state[:roll] + state[:roll_offset],
+          roll: new_state[:roll],
           pitch: new_state[:pitch],
           yaw: new_state[:yaw]
         }

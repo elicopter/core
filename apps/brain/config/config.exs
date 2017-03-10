@@ -73,7 +73,10 @@ config :brain, Drivers.LSM303DLHCMagnetometer,
 config :brain, Drivers.L3GD20H,
   bus: :i2c,
   bus_name: "i2c-1",
-  address: 0x6B
+  address: 0x6B,
+  zero_rate_x_drift: 0,
+  zero_rate_y_drift: 0,
+  zero_rate_z_drift: 0
 
 config :brain, Drivers.IBus,
   bus: :uart,
