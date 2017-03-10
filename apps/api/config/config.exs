@@ -7,7 +7,9 @@ use Mix.Config
 
 # Configures the endpoint
 config :api, Api.Endpoint,
+  http: [port: 80],
   url: [host: "localhost"],
+  server: true,
   secret_key_base: "yaneuLYOLLf+ugGPDGz5ABk0wmgV+LNt7jabFR/qUnkBRMFxt33KpMESScGl8UGw",
   render_errors: [view: Api.ErrorView, accepts: ~w(html json)],
   pubsub: [name: Api.PubSub,
@@ -20,4 +22,4 @@ config :logger, :console,
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
-import_config "#{Mix.env}.exs"
+# import_config "#{Mix.env}.exs"
