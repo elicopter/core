@@ -11,6 +11,7 @@ defmodule Brain do
     # end
     import Supervisor.Spec
     children = [
+      worker(Task, [fn -> start_network end], restart: :transient),
       supervisor(Brain.Sensors.Supervisor, []),
       supervisor(Brain.Actuators.Supervisor, []),
       supervisor(Drivers.Supervisor, [Drivers.IBus, Application.get_env(:brain, Drivers.IBus)], [id: Drivers.IBus]),
@@ -35,7 +36,11 @@ defmodule Brain do
     Supervisor.start_link(children, opts)
   end
 
+  def start_network do
+    {:ok, _pid} = Nerves.Networking.setup :eth0
+  end
+
   def production? do
-    System.get_env("CORE_ENV") == "prod" || System.get_env("CORE_ENV") == :prod
+    Application.get_env(:brain, :environment) == :prod
   end
 end

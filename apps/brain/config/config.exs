@@ -5,6 +5,8 @@ config :nerves, :firmware,
 config :nerves_interim_wifi,
   regulatory_domain: "US"
 
+config :brain, :environment, Mix.env
+
 config :brain, :wifi_configuration,
   ssid: "elicopter",
   psk: "elicopter2016",
