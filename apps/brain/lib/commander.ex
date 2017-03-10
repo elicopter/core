@@ -1,4 +1,4 @@
-defmodule Commander do
+defmodule Brain.Commander do
   use GenServer
   require Logger
   require Poison

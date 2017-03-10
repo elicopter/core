@@ -1,28 +1,28 @@
-defmodule Loop do
+defmodule Brain.Loop do
   use GenServer
   require Logger
-  alias Brain.Sensors.{Gyroscope, Accelerometer, Barometer, Magnetometer}
-  alias Brain.Receiver
+  alias Brain.Sensors.{Gyroscope, Accelerometer}
+  alias Brain.{Receiver, PIDController, Mixer, Interpreter, BlackBox, Commander}
+  alias Brain.Actuators.Motors
 
   @filter        Application.get_env(:brain, :filter)
   @sample_rate   Application.get_env(:brain, :sample_rate)
 
   def init(_) do
     # TODO implement reverse on pids
-    :ok = PIDController.configure({0.7, 0, 0, -500, 500}, :roll_rate_pid_controller)
-    :ok = PIDController.configure({0.7, 0, 0, -500, 500}, :pitch_rate_pid_controller)
-    :ok = PIDController.configure({3.5, 0, 0, -500, 500}, :yaw_rate_pid_controller)
+    :ok = PIDController.configure(:roll_rate_pid_controller, {0.7, 0, 0, -500, 500})
+    :ok = PIDController.configure(:pitch_rate_pid_controller, {0.7, 0, 0, -500, 500})
+    :ok = PIDController.configure(:yaw_rate_pid_controller, {3.5, 0, 0, -500, 500})
 
-    :ok = PIDController.configure({1.9, 0, 0, -400, 400}, :roll_angle_pid_controller)
-    :ok = PIDController.configure({-1.9, 0, 0, -400, 400}, :pitch_angle_pid_controller)
+    :ok = PIDController.configure(:roll_angle_pid_controller, {1.9, 0, 0, -400, 400})
+    :ok = PIDController.configure(:pitch_angle_pid_controller, {-1.9, 0, 0, -400, 400})
 
     :timer.send_interval(@sample_rate, :loop)
     {:ok, %{
       complete_last_loop_duration: nil,
       last_end_timestamp: nil,
       armed: false,
-      mode: :angle,
-      wifi_enabled: false
+      mode: :angle
     }}
   end
 
@@ -53,22 +53,22 @@ defmodule Loop do
       angle_setpoints       = nil
     else
       {:ok, angle_setpoints}     = Interpreter.setpoints(:angle, channels)
-      :ok                        = PIDController.update_setpoint(angle_setpoints[:roll], :roll_angle_pid_controller)
-      {:ok, roll_rate_setpoint}  = PIDController.compute(complementary_axes[:roll], :roll_angle_pid_controller)
-      :ok                        = PIDController.update_setpoint(-angle_setpoints[:pitch], :pitch_angle_pid_controller)
-      {:ok, pitch_rate_setpoint} = PIDController.compute(complementary_axes[:pitch], :pitch_angle_pid_controller)
+      :ok                        = PIDController.update_setpoint(:roll_angle_pid_controller, angle_setpoints[:roll])
+      {:ok, roll_rate_setpoint}  = PIDController.compute(:roll_angle_pid_controller, complementary_axes[:roll])
+      :ok                        = PIDController.update_setpoint(:pitch_angle_pid_controller, -angle_setpoints[:pitch])
+      {:ok, pitch_rate_setpoint} = PIDController.compute(:pitch_angle_pid_controller, complementary_axes[:pitch])
     end
 
     yaw_rate_setpoint = rate_setpoints[:yaw]
 
-    :ok          = PIDController.update_setpoint(roll_rate_setpoint,:roll_rate_pid_controller)
-    {:ok, roll}  = PIDController.compute(gyroscope[:y], :roll_rate_pid_controller)
+    :ok          = PIDController.update_setpoint(:roll_rate_pid_controller, roll_rate_setpoint)
+    {:ok, roll}  = PIDController.compute(:roll_rate_pid_controller, gyroscope[:y])
 
-    :ok          = PIDController.update_setpoint(pitch_rate_setpoint, :pitch_rate_pid_controller)
-    {:ok, pitch} = PIDController.compute(- gyroscope[:x], :pitch_rate_pid_controller)
+    :ok          = PIDController.update_setpoint(:pitch_rate_pid_controller, pitch_rate_setpoint)
+    {:ok, pitch} = PIDController.compute(:pitch_rate_pid_controller, -gyroscope[:x])
 
-    :ok          = PIDController.update_setpoint(yaw_rate_setpoint, :yaw_rate_pid_controller)
-    {:ok, yaw}   = PIDController.compute(- gyroscope[:z], :yaw_rate_pid_controller)
+    :ok          = PIDController.update_setpoint(:yaw_rate_pid_controller, yaw_rate_setpoint)
+    {:ok, yaw}   = PIDController.compute(:yaw_rate_pid_controller, -gyroscope[:z])
 
     throttle     = rate_setpoints[:throttle]
 
@@ -77,7 +77,6 @@ defmodule Loop do
     if state[:armed] == true, do: Motors.throttles(distribution)
 
     state = %{state | armed: toggle_motors(auxiliaries[:armed], state[:armed], rate_setpoints[:throttle])}
-    # state = %{state | wifi_enabled: toggle_wifi(auxiliaries[:wifi_enabled], state[:wifi_enabled])}
     state = %{state | mode: toggle_flight_mode(auxiliaries[:mode], state[:mode])}
 
     end_timestamp = :os.system_time(:milli_seconds)
@@ -127,37 +126,5 @@ defmodule Loop do
         Logger.debug("Switch to #{auxiliaries_mode} mode.")
         auxiliaries_mode
     end
-  end
-
-  def toggle_wifi(auxiliaries_wifi_enabled, state_wifi_enabled) do
-    case {auxiliaries_wifi_enabled, state_wifi_enabled} do
-      {true, false} ->
-        enable_wifi
-        true
-      {false, true} ->
-        disable_wifi
-        false
-      _ ->
-        state_wifi_enabled
-    end
-  end
-
-  def enable_wifi do
-    wifi          = Application.get_env(:brain, :wifi)
-    configuration = Application.get_env(:brain, :wifi_configuration)
-    wifi.setup(configuration[:interface],
-      ssid: configuration[:ssid],
-      key_mgmt: configuration[:key_mgmt],
-      psk: configuration[:psk])
-    :ok = GenServer.cast(:black_box, :connect)
-    :ok = GenServer.cast(:commander, :connect)
-    Logger.debug("Wifi enabled.")
-  end
-
-  def disable_wifi do
-    :ok = GenServer.cast(:black_box, :disconnect)
-    :ok = GenServer.cast(:commander, :disconnect)
-    Nerves.InterimWiFi.teardown("wlan0")
-    Logger.debug("Wifi disabled.")
   end
 end

@@ -1,6 +1,7 @@
-defmodule Interpreter do
+defmodule Brain.Interpreter do
   use GenServer
   require Logger
+  alias Brain.BlackBox
 
   @receiver_min 1000
   @receiver_max 2000
@@ -34,12 +35,12 @@ defmodule Interpreter do
   @mode_auxiliary_channel 8
 
   def init(_) do
-    {:ok, %{trace: true}}
+    {:ok, %{}}
   end
 
-  def start_link(name \\ :interpreter) do
+  def start_link() do
     Logger.debug "Starting #{__MODULE__}..."
-    GenServer.start_link(__MODULE__, nil, name: name)
+    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
   def handle_call({:setpoints, mode, nil}, _from, state) do
@@ -111,21 +112,19 @@ defmodule Interpreter do
   end
 
   defp trace(state, setpoints, channels, mode) do
-    if state[:trace] do
-      data = %{
-        setpoints: setpoints,
-        channels: channels,
-        mode: mode
-      }
-      BlackBox.trace(__MODULE__, Process.info(self())[:registered_name], data)
-    end
+    data = %{
+      setpoints: setpoints,
+      channels: channels,
+      mode: mode
+    }
+    BlackBox.trace(__MODULE__, Process.info(self())[:registered_name], data)
   end
 
-  def setpoints(mode, channels, pid \\ :interpreter) do
-    GenServer.call(pid, {:setpoints, mode, channels})
+  def setpoints(mode, channels) do
+    GenServer.call(__MODULE__, {:setpoints, mode, channels})
   end
 
-  def auxiliaries(channels, pid \\ :interpreter) do
-    GenServer.call(pid, {:auxiliaries, channels})
+  def auxiliaries(channels) do
+    GenServer.call(__MODULE__, {:auxiliaries, channels})
   end
 end

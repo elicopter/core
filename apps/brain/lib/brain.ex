@@ -18,26 +18,28 @@ defmodule Brain do
       worker(Brain.Receiver, [Drivers.IBus]),
       worker(@filter, [[name: :filter]]),
 
-      worker(PIDController, [:roll_rate_pid_controller], [id: :roll_rate_pid_controller]),
-      worker(PIDController, [:pitch_rate_pid_controller], [id: :pitch_rate_pid_controller]),
-      worker(PIDController, [:yaw_rate_pid_controller], [id: :yaw_rate_pid_controller]),
-      worker(PIDController, [:pitch_angle_pid_controller], [id: :pitch_angle_pid_controller]),
-      worker(PIDController, [:roll_angle_pid_controller], [id: :roll_angle_pid_controller]),
+      worker(Brain.PIDController, [[name: :roll_rate_pid_controller]], [id: :roll_rate_pid_controller]),
+      worker(Brain.PIDController, [[name: :pitch_rate_pid_controller]], [id: :pitch_rate_pid_controller]),
+      worker(Brain.PIDController, [[name: :yaw_rate_pid_controller]], [id: :yaw_rate_pid_controller]),
+      worker(Brain.PIDController, [[name: :pitch_angle_pid_controller]], [id: :pitch_angle_pid_controller]),
+      worker(Brain.PIDController, [[name: :roll_angle_pid_controller]], [id: :roll_angle_pid_controller]),
 
-      worker(Interpreter, []),
-      worker(Mixer, [])
+      worker(Brain.Interpreter, []),
+      worker(Brain.Mixer, []),
 
       # worker(BlackBox, [:black_box]),
       # worker(Commander, [:commander]),
 
-      #worker(Loop, [])
+      worker(Brain.Loop, [])
     ]
     opts = [strategy: :one_for_one, name: Core.Supervisor]
     Supervisor.start_link(children, opts)
   end
 
   def start_network do
-    {:ok, _pid} = Nerves.Networking.setup :eth0
+    if production?() do
+      {:ok, _pid} = Nerves.Networking.setup :eth0
+    end
   end
 
   def production? do

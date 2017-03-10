@@ -1,10 +1,15 @@
-defmodule Mixer do
+defmodule Brain.Mixer do
   use GenServer
   require Logger
-  require BlackBox
+  alias Brain.BlackBox
 
   def init(_) do
-    {:ok, %{trace: true}}
+    {:ok, %{}}
+  end
+
+  def start_link() do
+    Logger.debug "Starting #{__MODULE__}..."
+    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
   def handle_call({:distribute, throttle, roll, pitch, yaw}, _from, state) do
@@ -19,17 +24,10 @@ defmodule Mixer do
   end
 
   defp trace(state, distribution) do
-    if state[:trace] do
-      BlackBox.trace(__MODULE__, Process.info(self())[:registered_name], distribution)
-    end
+    BlackBox.trace(__MODULE__, Process.info(self())[:registered_name], distribution)
   end
 
-  def start_link(name \\ :mixer) do
-    Logger.debug "Starting #{__MODULE__}..."
-    GenServer.start_link(__MODULE__, nil, name: name)
-  end
-
-  def distribute(throttle, roll, pitch, yaw, pid \\ :mixer) do
-    GenServer.call(pid, {:distribute, throttle, roll, pitch, yaw})
+  def distribute(throttle, roll, pitch, yaw) do
+    GenServer.call(__MODULE__, {:distribute, throttle, roll, pitch, yaw})
   end
 end

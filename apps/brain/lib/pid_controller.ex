@@ -1,20 +1,24 @@
-defmodule PIDController do
+defmodule Brain.PIDController do
   use GenServer
   require Logger
-  require BlackBox
+  alias Brain.BlackBox
 
   @sample_rate Application.get_env(:brain, :sample_rate)
 
-  def init(%{trace: trace}) do
+  def init(_) do
     {:ok, %{
       sample_rate: @sample_rate,
       last_input: 0,
       integrative_term: 0,
       setpoint: 0,
       process_name: Process.info(self())[:registered_name],
-      last_timestamp: nil,
-      trace: trace
+      last_timestamp: nil
     }}
+  end
+
+  def start_link(opts) do
+    Logger.debug "Starting #{__MODULE__}..."
+    GenServer.start_link(__MODULE__, nil, opts)
   end
 
   def handle_call({:configure, kp, ki, kd, minimum_output, maximum_output}, _from, state) do
@@ -109,36 +113,29 @@ defmodule PIDController do
   end
 
   defp trace(state, error, output, proportional_term, integrative_term, derivative_term) do
-    if state[:trace] do
-      data = %{
-        name: Process.info(self())[:registered_name],
-        kp: state[:raw_kp],
-        ki: state[:raw_ki],
-        kd: state[:raw_kd],
-        proportional_term: proportional_term,
-        integrative_term: integrative_term,
-        derivative_term: derivative_term,
-        error: error,
-        output: output
-      }
-      BlackBox.trace(__MODULE__, Process.info(self())[:registered_name], data)
-    end
+    data = %{
+      name: Process.info(self())[:registered_name],
+      kp: state[:raw_kp],
+      ki: state[:raw_ki],
+      kd: state[:raw_kd],
+      proportional_term: proportional_term,
+      integrative_term: integrative_term,
+      derivative_term: derivative_term,
+      error: error,
+      output: output
+    }
+    BlackBox.trace(__MODULE__, Process.info(self())[:registered_name], data)
   end
 
-  def start_link(name, trace \\ true) do
-    Logger.debug "Starting #{__MODULE__}..."
-    GenServer.start_link(__MODULE__, %{trace: trace}, name: name)
-  end
-
-  def update_setpoint(setpoint, pid) do
+  def update_setpoint(pid, setpoint) do
     GenServer.call(pid, {:update_setpoint, setpoint})
   end
 
-  def compute(input, pid) do
+  def compute(pid, input) do
     GenServer.call(pid, {:compute, input})
   end
 
-  def configure(configuration, pid) do
+  def configure(pid, configuration) do
     GenServer.call(pid, Tuple.insert_at(configuration, 0, :configure))
   end
 end

@@ -1,4 +1,4 @@
-defmodule BlackBox do
+defmodule Brain.BlackBox do
   use GenServer
   require Logger
   require Poison
@@ -29,13 +29,13 @@ defmodule BlackBox do
 
   def trace(module, process_name, data) do
     case {module, process_name, data} do
-      {PIDController, _, data} ->
+      {Brain.PIDController, _, data} ->
         GenServer.cast(:black_box, {:trace, :pid_controllers, data[:name], data})
-      {Mixer, process_name, data} ->
+      {Brain.Mixer, process_name, data} ->
         GenServer.cast(:black_box, {:trace, process_name, :mixer, Enum.into(data, %{})})
-      {Interpreter, process_name, data} ->
+      {Brain.Interpreter, process_name, data} ->
         GenServer.cast(:black_box, {:trace, process_name, :interpreter, data})
-      {Loop, process_name, data} ->
+      {Brain.Loop, process_name, data} ->
         GenServer.cast(:black_box, {:trace, process_name, :brain, data})
     end
   end
