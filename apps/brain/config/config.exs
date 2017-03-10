@@ -2,6 +2,7 @@ use Mix.Config
 
 config :nerves, :firmware,
   rootfs_additions: "config/rootfs-additions"
+
 config :nerves_interim_wifi,
   regulatory_domain: "US"
 
