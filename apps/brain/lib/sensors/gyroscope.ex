@@ -11,4 +11,12 @@ defmodule Brain.Sensors.Gyroscope do
     Logger.debug "Starting #{__MODULE__}..."
     GenServer.start_link(__MODULE__, [driver_pid], name: __MODULE__)
   end
+
+  def handle_call(:calibrate, _from,  %{driver_pid: driver_pid} = state) do
+    {:reply, GenServer.call(driver_pid, :calibrate, 20000), state}
+  end
+
+  def calibrate do
+    GenServer.call(__MODULE__, :calibrate, 20000)
+  end
 end

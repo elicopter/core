@@ -17,7 +17,8 @@ defmodule Brain.Loop do
     :ok = PIDController.configure(Brain.RollAnglePIDController, {1.9, 0, 0, -400, 400})
     :ok = PIDController.configure(Brain.PitchAnglePIDController, {-1.9, 0, 0, -400, 400})
 
-    {:ok, _calibration_data} = GenServer.call(Drivers.L3GD20H, :calibrate, 20000)
+    {:ok, _calibration_data} = Gyroscope.calibrate
+
     :timer.send_interval(@sample_rate, :loop)
     {:ok, %{
       complete_last_loop_duration: nil,
