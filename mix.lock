@@ -22,6 +22,7 @@
   "nerves_firmware": {:hex, :nerves_firmware, "0.3.0", "e04dda1dc6ce13bc39f79596a14805e233e5fa78b29e21c2a71eb65691753fe9", [:mix], []},
   "nerves_firmware_http": {:git, "https://github.com/nerves-project/nerves_firmware_http.git", "7114cca11439b84e446479023672f76074d9ada8", []},
   "nerves_interim_wifi": {:hex, :nerves_interim_wifi, "0.1.1", "88c65ced1440e96b954189ccfc8a55cb4575cb64a8725907c3e8a9900adb2a70", [:make, :mix], [{:elixir_make, "~> 0.3", [hex: :elixir_make, optional: false]}, {:nerves_network_interface, "~> 0.3.1", [hex: :nerves_network_interface, optional: false]}, {:nerves_wpa_supplicant, "~> 0.2.2", [hex: :nerves_wpa_supplicant, optional: false]}]},
+  "nerves_neopixel": {:git, "https://github.com/loicvigneron/nerves_neopixel.git", "a014de854932c7c9b783721dcb3654c19c9e8d26", [branch: "update-deps", submodules: true]},
   "nerves_network_interface": {:hex, :nerves_network_interface, "0.3.3", "0a49e00f9f0bdb482e94d8e9885cf0a250ae04cc18d248d83bc184b8813ddda2", [:make, :mix], [{:elixir_make, "~> 0.3", [hex: :elixir_make, optional: false]}]},
   "nerves_networking": {:git, "https://github.com/nerves-project/nerves_networking.git", "e4398e6be3b02f912f96dec6e13f0ec36d6d1a31", []},
   "nerves_system_br": {:hex, :nerves_system_br, "0.9.4", "5096a9dfec49d4663ccb94c4a4fe45885303fbf31108f7e9400369bdec94b5e7", [:mix], []},

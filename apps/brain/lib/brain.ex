@@ -18,6 +18,7 @@ defmodule Brain do
       worker(Brain.Receiver, [Drivers.IBus]),
       worker(@filter, []),
 
+      worker(Brain.Neopixel, []),
       worker(Brain.PIDController, [[name: Brain.RollRatePIDController]], [id: Brain.RollRatePIDController]),
       worker(Brain.PIDController, [[name: Brain.PitchRatePIDController]], [id: Brain.PitchRatePIDController]),
       worker(Brain.PIDController, [[name: Brain.YawRatePIDController]], [id: Brain.YawRatePIDController]),

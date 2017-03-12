@@ -11,6 +11,9 @@ config :brain, :environment, Mix.env
 config :brain, Brain.BlackBox,
   buffer_limit: 30
 
+config :brain, Brain.Neopixel,
+  channel0: [pin: 18, count: 8]
+
 config :brain, :firmware_http,
   url: "http://elicopter:8988"
 

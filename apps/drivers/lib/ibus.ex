@@ -28,11 +28,11 @@ defmodule Drivers.IBus do
     {:reply, {:ok, nil}, state}
   end
 
-  def handle_info({:nerves_uart, "ttyS0", {:partial, partial_frame}}, state) do
+  def handle_info({:nerves_uart, _tty, {:partial, partial_frame}}, state) do
     {:noreply, %{state | got_partial_frame: true}}
   end
 
-  def handle_info({:nerves_uart, "ttyS0", frame}, state) do
+  def handle_info({:nerves_uart, _tty, frame}, state) do
     # TODO: Refactor, add checksum
     if byte_size(frame) == 31 do
       state = %{state | channels: parse_frame(frame)}
