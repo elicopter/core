@@ -14,8 +14,8 @@ defmodule Brain do
       worker(Task, [fn -> start_network end], restart: :transient),
       supervisor(Brain.Sensors.Supervisor, []),
       supervisor(Brain.Actuators.Supervisor, []),
-      supervisor(Drivers.Supervisor, [Drivers.IBus, Application.get_env(:brain, Drivers.IBus)], [id: Drivers.IBus]),
-      worker(Brain.Receiver, [Drivers.IBus]),
+      #supervisor(Drivers.Supervisor, [Drivers.IBus, Application.get_env(:brain, Drivers.IBus)], [id: Drivers.IBus]),
+      #worker(Brain.Receiver, [Drivers.IBus]),
       worker(@filter, [[name: :filter]]),
 
       worker(Brain.PIDController, [[name: :roll_rate_pid_controller]], [id: :roll_rate_pid_controller]),

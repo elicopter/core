@@ -35,7 +35,8 @@ defmodule Brain.Loop do
     start_timestamp = :os.system_time(:milli_seconds)
     {:ok, gyroscope}       = Gyroscope.read()
     {:ok, accelerometer}   = Accelerometer.read()
-    {:ok, channels}        = Receiver.channels()
+    #{:ok, channels}        = Receiver.channels()
+    channels = nil
 
     delta_with_last_loop = case state[:last_end_timestamp] do
       nil -> 0
