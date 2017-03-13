@@ -18,7 +18,7 @@ defmodule Brain do
       worker(Brain.Receiver, [Drivers.IBus]),
       worker(@filter, []),
 
-      worker(Brain.Neopixel, []),
+      #worker(Brain.Neopixel, []),
       worker(Brain.PIDController, [[name: Brain.RollRatePIDController]], [id: Brain.RollRatePIDController]),
       worker(Brain.PIDController, [[name: Brain.PitchRatePIDController]], [id: Brain.PitchRatePIDController]),
       worker(Brain.PIDController, [[name: Brain.YawRatePIDController]], [id: Brain.YawRatePIDController]),
@@ -45,6 +45,8 @@ defmodule Brain do
         :wifi ->
           wifi_configuration = Application.get_env(:brain, :wifi)
           IO.inspect Nerves.InterimWiFi.setup("wlan0", ssid: wifi_configuration[:ssid] , key_mgmt: :"WPA-PSK", psk: wifi_configuration[:password])
+        :both ->
+
       end
     end
   end

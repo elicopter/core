@@ -2,7 +2,7 @@ defmodule Brain.Loop do
   use GenServer
   require Logger
   alias Brain.Sensors.{Gyroscope, Accelerometer}
-  alias Brain.{Receiver, PIDController, Mixer, Interpreter, BlackBox, Commander, Neopixel}
+  alias Brain.{Receiver, PIDController, Mixer, Interpreter, BlackBox, Commander}
   alias Brain.Actuators.Motors
 
   @filter        Application.get_env(:brain, :filter)
@@ -18,8 +18,6 @@ defmodule Brain.Loop do
     :ok = PIDController.configure(Brain.PitchAnglePIDController, {1, 0, 0, -400, 400})
 
     {:ok, _calibration_data} = Gyroscope.calibrate
-
-    Neopixel.show_waiting()
 
     :timer.send_interval(@sample_rate, :loop)
     {:ok, %{
@@ -111,12 +109,10 @@ defmodule Brain.Loop do
       {true, false, true} ->
         Motors.arm
         Logger.info("Motors armed.")
-        Neopixel.show_armed()
         true
       {false, true, _} ->
         Motors.disarm
         Logger.info("Motors disarmed.")
-        Neopixel.show_waiting()
         false
       _ ->
         state_armed
