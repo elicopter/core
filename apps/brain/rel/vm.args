@@ -1,6 +1,6 @@
 ## Start the Elixir shell
 -noshell
 -user Elixir.IEx.CLI
--name elicopter@192.168.88.199
+-sname core@elicopter
 -setcookie secret
 -extra --no-halt

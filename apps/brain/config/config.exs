@@ -12,7 +12,7 @@ config :brain, :wifi,
   ssid: System.get_env("ELICOPTER_WIFI_SSID"),
   password: System.get_env("ELICOPTER_WIFI_PASSWORD")
 
-config :brain, :network, :ethernet
+config :brain, :network, :both
 
 config :brain, Brain.BlackBox,
   buffer_limit: 30

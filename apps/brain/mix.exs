@@ -16,7 +16,8 @@ defmodule Brain.Mixfile do
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
       aliases: aliases(),
-      deps: deps() ++ system(@target)
+      deps: deps() ++ system(@target),
+      kernel_modules: kernel_modules(@target)
     ]
   end
 
@@ -80,4 +81,9 @@ defmodule Brain.Mixfile do
       :nerves_neopixel
     ]
   end
+
+  def kernel_modules("rpi3") do
+    ["brcmfmac"]
+  end
+  def kernel_modules(_), do: []
 end
