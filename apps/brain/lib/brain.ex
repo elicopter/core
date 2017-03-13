@@ -39,7 +39,13 @@ defmodule Brain do
 
   def start_network do
     if production?() do
-      {:ok, _pid} = Nerves.Networking.setup :eth0
+      case Application.get_env(:brain, :network) do
+        :ethernet ->
+          {:ok, _pid} = Nerves.Networking.setup(:eth0)
+        :wifi ->
+          wifi_configuration = Application.get_env(:brain, :wifi)
+          IO.inspect Nerves.InterimWiFi.setup("wlan0", ssid: wifi_configuration[:ssid] , key_mgmt: :"WPA-PSK", psk: wifi_configuration[:password])
+      end
     end
   end
 

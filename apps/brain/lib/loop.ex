@@ -10,12 +10,12 @@ defmodule Brain.Loop do
 
   def init(_) do
     # TODO implement reverse on pids
-    :ok = PIDController.configure(Brain.RollRatePIDController, {0.7, 0, 0, -500, 500})
-    :ok = PIDController.configure(Brain.PitchRatePIDController, {0.7, 0, 0, -500, 500})
-    :ok = PIDController.configure(Brain.YawRatePIDController, {3.5, 0, 0, -500, 500})
+    :ok = PIDController.configure(Brain.RollRatePIDController, {1, 0, 0, -500, 500})
+    :ok = PIDController.configure(Brain.PitchRatePIDController, {1, 0, 0, -500, 500})
+    :ok = PIDController.configure(Brain.YawRatePIDController, {1, 0, 0, -500, 500})
 
-    :ok = PIDController.configure(Brain.RollAnglePIDController, {1.9, 0, 0, -400, 400})
-    :ok = PIDController.configure(Brain.PitchAnglePIDController, {-1.9, 0, 0, -400, 400})
+    :ok = PIDController.configure(Brain.RollAnglePIDController, {1, 0, 0, -400, 400})
+    :ok = PIDController.configure(Brain.PitchAnglePIDController, {1, 0, 0, -400, 400})
 
     {:ok, _calibration_data} = Gyroscope.calibrate
 
