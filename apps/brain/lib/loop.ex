@@ -2,7 +2,7 @@ defmodule Brain.Loop do
   use GenServer
   require Logger
   alias Brain.Sensors.{Gyroscope, Accelerometer}
-  alias Brain.{Receiver, PIDController, Mixer, Interpreter, BlackBox, Commander}
+  alias Brain.{Receiver, PIDController, Mixer, Interpreter, BlackBox, Commander, Neopixel}
   alias Brain.Actuators.Motors
 
   @filter        Application.get_env(:brain, :filter)
@@ -14,17 +14,19 @@ defmodule Brain.Loop do
     :ok = PIDController.configure(Brain.PitchRatePIDController, {1, 0, 0, -500, 500})
     :ok = PIDController.configure(Brain.YawRatePIDController, {1, 0, 0, -500, 500})
 
-    :ok = PIDController.configure(Brain.RollAnglePIDController, {1, 0, 0, -400, 400})
-    :ok = PIDController.configure(Brain.PitchAnglePIDController, {1, 0, 0, -400, 400})
+    :ok = PIDController.configure(Brain.RollAnglePIDController, {1, 0.2, 0, -400, 400})
+    :ok = PIDController.configure(Brain.PitchAnglePIDController, {1, 0.2, 0, -400, 400})
 
+    Neopixel.show_calibrate()
     {:ok, _calibration_data} = Gyroscope.calibrate
+    Neopixel.show_ready()
 
     :timer.send_interval(@sample_rate, :loop)
     {:ok, %{
       complete_last_loop_duration: nil,
       last_end_timestamp: nil,
       armed: false,
-      mode: :angle
+      mode: :rate
     }}
   end
 
@@ -79,7 +81,7 @@ defmodule Brain.Loop do
     if state[:armed] == true, do: Motors.throttles(distribution)
 
     state = %{state | armed: toggle_motors(auxiliaries[:armed], state[:armed], rate_setpoints[:throttle])}
-    state = %{state | mode: toggle_flight_mode(auxiliaries[:mode], state[:mode])}
+    # state = %{state | mode: toggle_flight_mode(auxiliaries[:mode], state[:mode])}
 
     end_timestamp = :os.system_time(:milli_seconds)
     new_state     = Map.merge(state, %{
@@ -95,6 +97,7 @@ defmodule Brain.Loop do
     data = %{
       complete_last_loop_duration: state[:complete_last_loop_duration],
       delta_with_last_loop: delta_with_last_loop,
+      mode: state[:mode],
       sensors: %{
         gyroscope: sensors[:gyroscope],
         accelerometer: sensors[:accelerometer]
@@ -109,10 +112,12 @@ defmodule Brain.Loop do
       {true, false, true} ->
         Motors.arm
         Logger.info("Motors armed.")
+        Neopixel.show_armed()
         true
       {false, true, _} ->
         Motors.disarm
         Logger.info("Motors disarmed.")
+        Neopixel.show_ready()
         false
       _ ->
         state_armed

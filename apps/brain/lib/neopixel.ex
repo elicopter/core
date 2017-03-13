@@ -14,14 +14,23 @@ defmodule Brain.Neopixel do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
-  def handle_cast(:waiting, state) do
-    {:ok, pulse_spawned_pid} = pulse(0, @configuration[:channel0][:count], [color: {47, 86, 233}])
-    {:noreply, %{state | pulse_spawned_pid: pulse_spawned_pid}}
+  def handle_cast(:calibrate, state) do
+    data = List.duplicate({0, 0, 255}, 8)
+    Nerves.Neopixel.render(0, {50, data})
+    {:noreply, state}
+  end
+
+  def handle_cast(:ready, state) do
+    # TODO: find why the pulse crash the http firmware update...
+    # {:ok, pulse_spawned_pid} = pulse(0, @configuration[:channel0][:count], [color: {47, 86, 233}])
+    data = List.duplicate({0, 255, 0}, 8)
+    Nerves.Neopixel.render(0, {50, data})
+    {:noreply, state}
   end
 
   def handle_cast(:armed, %{pulse_spawned_pid: pulse_spawned_pid} = state) do
-    data = List.duplicate({205, 30, 16}, 8)
-    Nerves.Neopixel.render(0, {100, data})
+    data = List.duplicate({255, 0, 0}, 8)
+    Nerves.Neopixel.render(0, {50, data})
     state = case pulse_spawned_pid do
       nil -> state
       pid ->
@@ -56,11 +65,15 @@ defmodule Brain.Neopixel do
     pulse_indef(channel, data, brightness, direction)
   end
 
-  def show_waiting do
-    GenServer.cast(__MODULE__, :waiting)
+  def show_ready do
+    GenServer.cast(__MODULE__, :ready)
   end
 
   def show_armed do
     GenServer.cast(__MODULE__, :armed)
+  end
+
+  def show_calibrate do
+    GenServer.cast(__MODULE__, :calibrate)
   end
 end

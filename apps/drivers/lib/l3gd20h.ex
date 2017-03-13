@@ -11,13 +11,13 @@ defmodule Drivers.L3GD20H do
   @ctrl_reg1_register 0x20
   @ctrl_reg4_register 0x23
   @out_x_l_register 0x28
-  @sensitivity 0.070
+  @sensitivity 0.0175
   @calibration_reads 5000
 
   def init([bus_pid, configuration]) do
     validate_i2c_device!(bus_pid)
     i2c().write(bus_pid, <<@ctrl_reg1_register, 0xFF>>) # 800 hz
-    i2c().write(bus_pid, <<@ctrl_reg4_register, 0x11>>) # 2000 dps
+    i2c().write(bus_pid, <<@ctrl_reg4_register, 0x10>>) # 500 dps
     {:ok, %State{
         bus_pid: bus_pid,
         zero_rate_x_drift: configuration[:zero_rate_x_drift] || 0,

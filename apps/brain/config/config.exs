@@ -31,7 +31,7 @@ config :brain, :wifi_configuration,
 
 config :brain, :filter, Filter.Complementary
 
-config :brain, :sample_rate, 30
+config :brain, :sample_rate, 15
 
 config :brain, :sensors, [
   # Brain.Sensors.Barometer, # Need to be fixed
