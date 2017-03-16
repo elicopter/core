@@ -3,8 +3,6 @@
 
 Elicopter Core aims to be a resilient and future proof flight controller.
 
-https://dl.dropboxusercontent.com/u/99900536/elicopter_core_logo_small.png
-
 > Note: Elicopter Core is still under heavy development.
 
 ## Build From Sources
