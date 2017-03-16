@@ -1,5 +1,9 @@
+![Elicopter Core](https://dl.dropboxusercontent.com/u/99900536/elicopter_core_logo_small.png)
+=========
 
 Elicopter Core aims to be a resilient and future proof flight controller.
+
+https://dl.dropboxusercontent.com/u/99900536/elicopter_core_logo_small.png
 
 > Note: Elicopter Core is still under heavy development.
 
@@ -53,12 +57,12 @@ mix firmware.burn
 
 ### Network Firmware Update
 
-> Note: The flight controller needs to be already started and connected to the network.
-
 * Build and deploy the firmware directly on the flight controller:
 ```
 MIX_ENV=prod mix firmware.update
 ```
+
+> Note: The flight controller needs to be already started and connected to the network.
 
 ## Contributing
 
@@ -66,4 +70,4 @@ Please read [CONTRIBUTING.md](https://github.com/elicopter/elicopter/blob/master
 
 ## License
 
-This project is licensed under the MIT License - see the [https://github.com/elicopter/elicopter/blob/master/LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the MIT License - see the [LICENSE.md](https://github.com/elicopter/elicopter/blob/master/LICENSE.md) file for details.
