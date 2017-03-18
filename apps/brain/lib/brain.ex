@@ -13,7 +13,7 @@ defmodule Brain do
     import Supervisor.Spec
     children = [
       worker(Task, [fn -> init_kernel_modules() end], restart: :transient, id: Nerves.Init.KernelModules),
-      worker(Task, [fn -> start_network end], restart: :transient),
+      worker(Task, [fn -> start_network end], restart: :transient, id: Brain.Network),
       supervisor(Brain.Sensors.Supervisor, []),
       supervisor(Brain.Actuators.Supervisor, []),
       supervisor(Drivers.Supervisor, [Drivers.IBus, Application.get_env(:brain, Drivers.IBus)], [id: Drivers.IBus]),
@@ -51,6 +51,7 @@ defmodule Brain do
           setup_ethernet()
       end
     end
+    advertise_ssdp()
   end
 
   def production? do
@@ -68,5 +69,10 @@ defmodule Brain do
   defp setup_wifi do
     wifi_configuration = Application.get_env(:brain, :wifi)
     {:ok, _pid} = Nerves.InterimWiFi.setup(:wlan0, ssid: wifi_configuration[:ssid] , key_mgmt: :"WPA-PSK", psk: wifi_configuration[:password])
+  end
+
+  defp advertise_ssdp do
+    name = Application.get_env(:brain, :name)
+    Nerves.SSDPServer.publish(name, "elicopter")
   end
 end

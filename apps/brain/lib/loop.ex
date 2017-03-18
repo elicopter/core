@@ -21,7 +21,7 @@ defmodule Brain.Loop do
     {:ok, _calibration_data} = Gyroscope.calibrate
     Neopixel.show_ready()
 
-    :timer.send_interval(@sample_rate, :loop)
+    :timer.send_after(@sample_rate, :loop)
     {:ok, %{
       complete_last_loop_duration: nil,
       last_end_timestamp: nil,
@@ -89,6 +89,7 @@ defmodule Brain.Loop do
       last_end_timestamp: end_timestamp
     })
     trace(new_state, %{gyroscope: gyroscope, accelerometer: accelerometer}, complementary_axes, delta_with_last_loop)
+    :timer.send_after(@sample_rate, :loop)
     {:noreply, new_state}
   end
 

@@ -4,14 +4,24 @@ defmodule Brain.BlackBox do
   require Poison
 
   @buffer_limit Application.get_env(:brain, Brain.BlackBox)[:buffer_limit]
+  @flush_interval Application.get_env(:brain, Brain.BlackBox)[:flush_interval]
 
   def init(_) do
+    :timer.send_after(10, :flush)
     {:ok, %{buffer: %{}}}
   end
 
   def start_link() do
     Logger.debug "Starting #{__MODULE__}..."
     GenServer.start_link(__MODULE__, nil, name: __MODULE__)
+  end
+
+  def handle_info(:flush, state) do
+    Enum.each(state[:buffer], fn({key, data}) ->
+      :ok = Api.Endpoint.broadcast! "black_box:#{key}", "data", data |> List.first
+    end)
+    :timer.send_after(@flush_interval, :flush)
+    {:noreply, state}
   end
 
   def handle_cast({:trace, key, data}, %{buffer: buffer} = state) do
@@ -23,7 +33,6 @@ defmodule Brain.BlackBox do
         events = List.delete_at(events, @buffer_limit - 1)
         [data | events]
     end
-    :ok = Api.Endpoint.broadcast! "black_box:#{key}", "data", data
     buffer = Map.put(buffer, key, events)
     {:noreply, %{state | buffer: buffer}}
   end
@@ -43,10 +52,10 @@ defmodule Brain.BlackBox do
         {:trace, :interpreter, data}
       {Brain.Filter.Complementary, _process_name, data} ->
         {:trace, :filter, data}
-      {Brain.PIDController, process_name, data} ->
-        pid_name = process_name |> Module.split |> List.last |> Macro.underscore |> String.replace("_pid_controller", "")
-        data     = Map.merge(data, %{name: pid_name})
-        {:trace, :pids, data}
+      # {Brain.PIDController, process_name, data} ->
+      #   pid_name = process_name |> Module.split |> List.last |> Macro.underscore |> String.replace("_pid_controller", "")
+      #   data     = Map.merge(data, %{name: pid_name})
+      #   {:trace, :pids, data}
       {Brain.Loop, _process_name, data} ->
         {:trace, :loop, data}
       {_, process_name, data} ->

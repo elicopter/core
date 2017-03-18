@@ -43,7 +43,8 @@ defmodule Brain.Mixfile do
       {:credo, "~> 0.4", only: [:dev, :test]},
       {:nerves_firmware_http, github: "nerves-project/nerves_firmware_http"},
       {:httpoison, "~> 0.11.0"},
-      {:nerves_neopixel, github: "loicvigneron/nerves_neopixel", branch: "update-deps", submodules: true}
+      {:nerves_neopixel, github: "loicvigneron/nerves_neopixel", branch: "update-deps", submodules: true},
+      {:nerves_ssdp_server, "~> 0.2.2"}
     ]
   end
 
@@ -78,7 +79,8 @@ defmodule Brain.Mixfile do
       :api,
       :drivers,
       :nerves_firmware_http,
-      :nerves_neopixel
+      :nerves_neopixel,
+      :nerves_ssdp_server
     ]
   end
 

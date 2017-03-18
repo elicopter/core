@@ -6,6 +6,7 @@ config :nerves, :firmware,
 config :nerves_interim_wifi,
   regulatory_domain: "US"
 
+config :brain, :name, "My Elicopter"
 config :brain, :environment, Mix.env
 
 config :brain, :wifi,
@@ -15,7 +16,8 @@ config :brain, :wifi,
 config :brain, :network, :both
 
 config :brain, Brain.BlackBox,
-  buffer_limit: 30
+  buffer_limit: 50,
+  flush_interval: 100
 
 config :brain, Brain.Neopixel,
   channel0: [pin: 18, count: 8]

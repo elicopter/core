@@ -9,6 +9,7 @@ use Mix.Config
 config :api, Api.Endpoint,
   http: [port: 80],
   url: [host: "elicopter"],
+  check_origin: false, # Need to remove
   server: true,
   secret_key_base: "yaneuLYOLLf+ugGPDGz5ABk0wmgV+LNt7jabFR/qUnkBRMFxt33KpMESScGl8UGw",
   render_errors: [view: Api.ErrorView, accepts: ~w(html json)],
