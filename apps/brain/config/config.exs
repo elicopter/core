@@ -29,7 +29,7 @@ config :brain, :wifi_configuration,
   interface: "wlan0",
   key_mgmt: :"WPA-PSK"
 
-config :brain, :filter, Filter.Complementary
+config :brain, :filter, Brain.Filter.Complementary
 
 config :brain, :sample_rate, 15
 

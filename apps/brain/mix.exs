@@ -17,7 +17,7 @@ defmodule Brain.Mixfile do
       start_permanent: Mix.env == :prod,
       aliases: aliases(),
       deps: deps() ++ system(@target),
-      kernel_modules: kernel_modules(@target)
+      kernel_modules: kernel_modules(@target, Mix.env)
     ]
   end
 
@@ -82,8 +82,8 @@ defmodule Brain.Mixfile do
     ]
   end
 
-  def kernel_modules("rpi3") do
+  def kernel_modules("rpi3", :prod) do
     ["brcmfmac"]
   end
-  def kernel_modules(_), do: []
+  def kernel_modules(_, _), do: []
 end

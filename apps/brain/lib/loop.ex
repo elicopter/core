@@ -96,13 +96,7 @@ defmodule Brain.Loop do
   def trace(state, sensors, complementary_axes, delta_with_last_loop) do
     data = %{
       complete_last_loop_duration: state[:complete_last_loop_duration],
-      delta_with_last_loop: delta_with_last_loop,
-      mode: state[:mode],
-      sensors: %{
-        gyroscope: sensors[:gyroscope],
-        accelerometer: sensors[:accelerometer]
-      },
-      complementary_axes: complementary_axes
+      delta_with_last_loop: delta_with_last_loop
     }
     BlackBox.trace(__MODULE__, Process.info(self())[:registered_name], data)
   end

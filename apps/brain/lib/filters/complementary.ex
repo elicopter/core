@@ -1,5 +1,6 @@
-defmodule Filter.Complementary do
+defmodule Brain.Filter.Complementary do
   require Logger
+  alias Brain.BlackBox
 
   @pi          3.14159265359
   @sample_rate Application.get_env(:brain, :sample_rate)
@@ -32,6 +33,7 @@ defmodule Filter.Complementary do
       pitch: (pitch_gyroscope * state[:alpha] + pitch_accelerometer * (1- state[:alpha])),
       yaw: yaw_gyroscope
     }
+    trace(state, new_state)
     {:reply,
       {
         :ok, %{
@@ -54,4 +56,9 @@ defmodule Filter.Complementary do
   def offset(axis, value) do
     GenServer.cast(__MODULE__, {:offset, axis, value})
   end
+
+  defp trace(_state, data) do
+    BlackBox.trace(__MODULE__, Process.info(self())[:registered_name], data)
+  end
+
 end

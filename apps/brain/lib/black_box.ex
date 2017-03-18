@@ -23,6 +23,7 @@ defmodule Brain.BlackBox do
         events = List.delete_at(events, @buffer_limit - 1)
         [data | events]
     end
+    :ok = Api.Endpoint.broadcast! "black_box:#{key}", "data", data
     buffer = Map.put(buffer, key, events)
     {:noreply, %{state | buffer: buffer}}
   end
@@ -36,22 +37,20 @@ defmodule Brain.BlackBox do
 
   def trace(module, process_name, data) do
     event = case {module, process_name, data} do
-      {Brain.PIDController, Brain.RollRatePIDController, data} ->
-        {:trace, :roll_rate_pid_controller, data}
-      {Brain.PIDController, Brain.PitchRatePIDController, data} ->
-        {:trace, :pitch_rate_pid_controller, data}
-      {Brain.PIDController, Brain.YawRatePIDController, data} ->
-        {:trace, :yaw_rate_pid_controller, data}
-      {Brain.PIDController, Brain.PitchAnglePIDController, data} ->
-        {:trace, :pitch_angle_pid_controller, data}
-      {Brain.PIDController, Brain.RollAnglePIDController, data} ->
-        {:trace, :roll_angle_pid_controller, data}
       {Brain.Mixer, _process_name, data} ->
         {:trace, :mixer, Enum.into(data, %{})}
       {Brain.Interpreter, _process_name, data} ->
         {:trace, :interpreter, data}
+      {Brain.Filter.Complementary, _process_name, data} ->
+        {:trace, :filter, data}
+      {Brain.PIDController, process_name, data} ->
+        pid_name = process_name |> Module.split |> List.last |> Macro.underscore |> String.replace("_pid_controller", "")
+        data     = Map.merge(data, %{name: pid_name})
+        {:trace, :pids, data}
       {Brain.Loop, _process_name, data} ->
         {:trace, :loop, data}
+      {_, process_name, data} ->
+        {:trace, process_name |> Module.split |> List.last |> Macro.underscore, data}
     end
     GenServer.cast(__MODULE__, event)
   end

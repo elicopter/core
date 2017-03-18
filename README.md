@@ -23,7 +23,7 @@ mix deps.get
 mix compile
 ```
 
-## Run
+## Develop
 
 ```
 cd apps/brain
