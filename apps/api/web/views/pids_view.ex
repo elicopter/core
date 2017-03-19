@@ -13,6 +13,10 @@ defmodule Api.PIDsView do
     }
   end
 
+  def render("create.json", %{}) do
+    %{}
+  end
+
   def render("pid.json", %{pid: pid}) do
     pid
   end

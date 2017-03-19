@@ -9,9 +9,9 @@ defmodule Api.Router do
     pipe_through :api
 
     get "/", HomeController, :index
-    get "/sensors", SensorsController, :index
-    get "/pids", PIDsController, :index
-    get "/pids/:name", PIDsController, :show
+    resources "/sensors", SensorsController, only: [:index]
+    resources "/pids", PIDsController, only: [:index, :show, :create]
+
     get "/snapshot", SnapshotController, :show
     get "/status", StatusController, :show
   end
