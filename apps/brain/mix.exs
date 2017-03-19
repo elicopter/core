@@ -45,7 +45,8 @@ defmodule Brain.Mixfile do
       {:httpoison, "~> 0.11.0"},
       {:nerves_neopixel, github: "loicvigneron/nerves_neopixel", branch: "update-deps", submodules: true},
       {:nerves_ssdp_server, "~> 0.2.2"},
-      {:nerves_ssdp_client, "~> 0.1.3"}
+      {:nerves_ssdp_client, "~> 0.1.3"},
+      {:timex, "> 0.0.0"}
     ]
   end
 
@@ -70,14 +71,15 @@ defmodule Brain.Mixfile do
 
   defp base_applications do
     [
+      :timex,
+      :api,
+      :logger,
       :runtime_tools,
       :nerves,
       :nerves_networking,
       :nerves_uart,
-      :logger,
       :apex,
       :poison,
-      :api,
       :drivers,
       :nerves_firmware_http,
       :nerves_neopixel,

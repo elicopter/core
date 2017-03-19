@@ -1,4 +1,4 @@
-defmodule Api.SnapshotsView do
+defmodule Api.SnapshotView do
   use Api.Web, :view
 
   def render("show.json", %{snapshot: snapshot}) do

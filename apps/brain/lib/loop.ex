@@ -32,7 +32,7 @@ defmodule Brain.Loop do
 
   def start_link do
     Logger.debug "Starting #{__MODULE__}..."
-    GenServer.start_link(__MODULE__, nil, name: :brain)
+    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
   def handle_info(:loop, state) do
@@ -83,6 +83,10 @@ defmodule Brain.Loop do
     state = %{state | armed: toggle_motors(auxiliaries[:armed], state[:armed], rate_setpoints[:throttle])}
     # state = %{state | mode: toggle_flight_mode(auxiliaries[:mode], state[:mode])}
 
+    # Status
+    :ok = BlackBox.update_status(:armed, state[:armed])
+    :ok = BlackBox.update_status(:flight_mode, auxiliaries[:mode])
+    # Times
     end_timestamp = :os.system_time(:milli_seconds)
     new_state     = Map.merge(state, %{
       complete_last_loop_duration: end_timestamp - start_timestamp,

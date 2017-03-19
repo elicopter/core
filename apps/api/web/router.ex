@@ -10,6 +10,9 @@ defmodule Api.Router do
 
     get "/", HomeController, :index
     get "/sensors", SensorsController, :index
-    get "/snapshot", SnapshotsController, :show
+    get "/pids", PIDsController, :index
+    get "/pids/:name", PIDsController, :show
+    get "/snapshot", SnapshotController, :show
+    get "/status", StatusController, :show
   end
 end

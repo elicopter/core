@@ -20,16 +20,19 @@ defmodule Api.Mixfile do
 
   def application do
     [mod: {Api, []},
-     applications: [:phoenix, :phoenix_pubsub, :cowboy, :logger]]
+     applications: [:phoenix, :phoenix_pubsub, :cowboy, :logger, :corsica]]
   end
 
   defp elixirc_paths(:test), do: ["lib", "web", "test/support"]
   defp elixirc_paths(_),     do: ["lib", "web"]
 
   defp deps do
-    [{:phoenix, "~> 1.2.1"},
-     {:phoenix_pubsub, "~> 1.0"},
-     {:phoenix_live_reload, "~> 1.0", only: :dev},
-     {:cowboy, "~> 1.0"}]
+    [
+      {:phoenix, "~> 1.2.1"},
+      {:phoenix_pubsub, "~> 1.0"},
+      {:phoenix_live_reload, "~> 1.0", only: :dev},
+      {:cowboy, "~> 1.0"},
+      {:corsica, "~> 0.5"}
+    ]
   end
 end

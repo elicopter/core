@@ -10,6 +10,7 @@ defmodule Mix.Tasks.Firmware.Update do
     Logger.info("Found #{elicopter_name} at #{elicopter_info[:host]}.")
     build()
     upload(elicopter_info[:host])
+    Logger.info("Firmware updated!")
   end
 
   defp discover do
@@ -34,6 +35,5 @@ defmodule Mix.Tasks.Firmware.Update do
     firmware_update_url = "http://#{host}:8988/firmware"
     firmware_path       = Path.absname("_images/rpi3/brain.fw")
     HTTPoison.request!(:post, firmware_update_url, {:file, firmware_path}, [{"Content-Type", "application/x-firmware"}, {"X-Reboot", "true"}], [timeout: 30000, recv_timeout: 30000])
-    # HTTPoison.post!(firmware_update_url, {:file, firmware_path}, [{"Content-Type", "application/x-firmware"}, {"X-Reboot", "true"}])
   end
 end

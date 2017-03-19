@@ -36,6 +36,18 @@ defmodule Brain.PIDController do
     {:reply, :ok, Map.merge(state, new_state)}
   end
 
+  def handle_call(:snapshot, _from, state) do
+    snapshot = %{
+      name: state[:process_name] |> Module.split |> List.last,
+      kp: state[:kp],
+      ki: state[:ki],
+      kd: state[:kd],
+      minimum_output: state[:minimum_output],
+      maximum_output: state[:maximum_output]
+    }
+    {:reply, {:ok, snapshot}, state}
+  end
+
   def handle_call({:update_setpoint, value}, _from, state) do
     {:reply, :ok, %{state | setpoint: value}}
   end
@@ -136,5 +148,9 @@ defmodule Brain.PIDController do
 
   def configure(pid, configuration) do
     GenServer.call(pid, Tuple.insert_at(configuration, 0, :configure))
+  end
+
+  def snapshot(pid) do
+    GenServer.call(pid, :snapshot)
   end
 end

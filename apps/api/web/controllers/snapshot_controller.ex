@@ -1,4 +1,4 @@
-defmodule Api.SnapshotsController do
+defmodule Api.SnapshotController do
   use Api.Web, :controller
 
   def show(conn, _params) do

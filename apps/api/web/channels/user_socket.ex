@@ -3,7 +3,7 @@ defmodule Api.UserSocket do
 
   ## Channels
   channel "black_box:*", Api.BlackBoxChannel
-  channel "sensors:*", Api.SensorsChannel
+  channel "logger:*", Api.LoggerChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket

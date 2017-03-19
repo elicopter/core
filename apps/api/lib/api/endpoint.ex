@@ -22,5 +22,6 @@ defmodule Api.Endpoint do
   plug Plug.MethodOverride
   plug Plug.Head
 
+  plug Corsica, origins: "*"
   plug Api.Router
 end

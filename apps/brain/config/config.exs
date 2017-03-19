@@ -6,6 +6,10 @@ config :nerves, :firmware,
 config :nerves_interim_wifi,
   regulatory_domain: "US"
 
+config :logger, 
+  backends: [Brain.ChannelLoggerBackend, :console],
+  level: :debug
+
 config :brain, :name, "My Elicopter"
 config :brain, :environment, Mix.env
 
@@ -21,12 +25,6 @@ config :brain, Brain.BlackBox,
 
 config :brain, Brain.Neopixel,
   channel0: [pin: 18, count: 8]
-
-config :brain, :wifi_configuration,
-  ssid: "elicopter",
-  psk: "elicopter2016",
-  interface: "wlan0",
-  key_mgmt: :"WPA-PSK"
 
 config :brain, :filter, Brain.Filter.Complementary
 

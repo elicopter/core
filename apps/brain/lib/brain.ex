@@ -1,19 +1,16 @@
 defmodule Brain do
   use Application
   require Logger
-
+  alias Brain.BlackBox
+  
   @filter Application.get_env(:brain, :filter)
   @kernel_modules Mix.Project.config[:kernel_modules] || []
 
   def start(_type, _args) do
-    # if production? do
-    #   {:ok, _} = Nerves.NetworkInterface.status("wlan0")
-    #   Logger.debug "Check if wlan0 is up, reboot if not."
-    # end
     import Supervisor.Spec
     children = [
       worker(Task, [fn -> init_kernel_modules() end], restart: :transient, id: Nerves.Init.KernelModules),
-      worker(Task, [fn -> start_network end], restart: :transient, id: Brain.Network),
+      worker(Task, [fn -> start_network() end], restart: :transient, id: Brain.Network),
       supervisor(Brain.Sensors.Supervisor, []),
       supervisor(Brain.Actuators.Supervisor, []),
       supervisor(Drivers.Supervisor, [Drivers.IBus, Application.get_env(:brain, Drivers.IBus)], [id: Drivers.IBus]),
@@ -41,7 +38,8 @@ defmodule Brain do
 
   def start_network do
     if production?() do
-      case Application.get_env(:brain, :network) do
+      network_type = Application.get_env(:brain, :network)
+      case network_type do
         :ethernet ->
           setup_ethernet()
         :wifi ->
@@ -49,8 +47,11 @@ defmodule Brain do
         :both ->
           setup_wifi()
           setup_ethernet()
+        
       end
+      :ok = BlackBox.update_status(:network, network_type)
     end
+    Process.sleep(2000) #TODO: improve
     advertise_ssdp()
   end
 

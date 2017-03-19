@@ -17,12 +17,25 @@ defmodule Sensors.Common do
         {:reply, {:ok, data}, state}
       end
 
-      def read() do
+      def handle_call(:snapshot, _from, %{driver_pid: driver_pid} = state) do
+        {:ok, data} = GenServer.call(driver_pid, :read)
+        snapshot = %{
+          name: __MODULE__ |> Module.split |> List.last,
+          data: data
+        }
+        {:reply, {:ok, snapshot}, state}
+      end
+
+      def read do
         GenServer.call(__MODULE__, :read)
       end
 
       defp trace(_state, data) do
         BlackBox.trace(__MODULE__, Process.info(self())[:registered_name], data)
+      end
+
+      def snapshot do
+        GenServer.call(__MODULE__, :snapshot)
       end
     end
   end
