@@ -22,9 +22,6 @@ config :brain, Brain.BlackBox,
 config :brain, Brain.Neopixel,
   channel0: [pin: 18, count: 8]
 
-config :brain, :firmware_http,
-  url: "http://elicopter:8988"
-
 config :brain, :wifi_configuration,
   ssid: "elicopter",
   psk: "elicopter2016",

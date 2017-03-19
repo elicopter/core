@@ -44,7 +44,8 @@ defmodule Brain.Mixfile do
       {:nerves_firmware_http, github: "nerves-project/nerves_firmware_http"},
       {:httpoison, "~> 0.11.0"},
       {:nerves_neopixel, github: "loicvigneron/nerves_neopixel", branch: "update-deps", submodules: true},
-      {:nerves_ssdp_server, "~> 0.2.2"}
+      {:nerves_ssdp_server, "~> 0.2.2"},
+      {:nerves_ssdp_client, "~> 0.1.3"}
     ]
   end
 
