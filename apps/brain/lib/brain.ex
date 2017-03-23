@@ -2,7 +2,7 @@ defmodule Brain do
   use Application
   require Logger
   alias Brain.BlackBox
-  
+
   @filter Application.get_env(:brain, :filter)
   @kernel_modules Mix.Project.config[:kernel_modules] || []
 
@@ -47,7 +47,7 @@ defmodule Brain do
         :both ->
           setup_wifi()
           setup_ethernet()
-        
+
       end
       :ok = BlackBox.update_status(:network, network_type)
     end
@@ -72,8 +72,10 @@ defmodule Brain do
     {:ok, _pid} = Nerves.InterimWiFi.setup(:wlan0, ssid: wifi_configuration[:ssid] , key_mgmt: :"WPA-PSK", psk: wifi_configuration[:password])
   end
 
-  defp advertise_ssdp do
+  def advertise_ssdp do
     name = Application.get_env(:brain, :name)
-    Nerves.SSDPServer.publish(name, "elicopter")
+    Nerves.SSDPServer.publish(name, "elicopter",[
+      port: Application.get_env(:api, Api.Endpoint)[:http][:port]
+    ])
   end
 end

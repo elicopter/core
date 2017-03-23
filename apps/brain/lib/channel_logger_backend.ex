@@ -13,7 +13,7 @@ defmodule Brain.ChannelLoggerBackend do
       message: message |> IO.iodata_to_binary
     }
     with :ok <- Api.Endpoint.broadcast("logger:#{level |> Atom.to_string}", "data", payload) do
-    else {:error, error} -> 
+    else {:error, error} ->
         IO.puts "#{__MODULE__} Can't log to channel"
         IO.inspect error
         IO.inspect message
