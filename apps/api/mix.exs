@@ -19,8 +19,10 @@ defmodule Api.Mixfile do
   end
 
   def application do
-    [mod: {Api, []},
-     applications: [:phoenix, :phoenix_pubsub, :cowboy, :logger, :corsica]]
+    [
+      mod: {Api, []},
+      applications: [:phoenix, :phoenix_pubsub, :cowboy, :logger, :corsica]
+    ]
   end
 
   defp elixirc_paths(:test), do: ["lib", "web", "test/support"]

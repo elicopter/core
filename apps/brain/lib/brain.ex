@@ -37,21 +37,20 @@ defmodule Brain do
   end
 
   def start_network do
-    if production?() do
-      network_type = Application.get_env(:brain, :network)
-      case network_type do
-        :ethernet ->
-          setup_ethernet()
-        :wifi ->
-          setup_wifi()
-        :both ->
-          setup_wifi()
-          setup_ethernet()
-
-      end
-      :ok = BlackBox.update_status(:network, network_type)
+    network_type = Application.get_env(:brain, :network) || :none
+    case network_type do
+      :ethernet ->
+        setup_ethernet()
+      :wifi ->
+        setup_wifi()
+      :both ->
+        setup_wifi()
+        setup_ethernet()
+      :none ->
+        Logger.debug("#{__MODULE__} network not configured.")
     end
     Process.sleep(2000) #TODO: improve
+    :ok = BlackBox.update_status(:network, network_type)
     advertise_ssdp()
   end
 

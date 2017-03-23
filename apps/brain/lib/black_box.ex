@@ -104,7 +104,7 @@ defmodule Brain.BlackBox do
   end
 
   defp processes do
-    Process.list |> Enum.reduce([], fn(pid, acc) -> 
+    Process.list |> Enum.reduce([], fn(pid, acc) ->
       process_info = Process.info(pid)
       process_info = %{
         name:               process_info[:registered_name],
@@ -119,7 +119,7 @@ defmodule Brain.BlackBox do
           [process_info | acc]
         _ -> acc
       end
-    end) |> Enum.filter(fn (process) -> process_selected?(process[:name]) end) 
+    end) |> Enum.filter(fn (process) -> process_selected?(process[:name]) end)
   end
 
   defp process_selected?(process_name) do

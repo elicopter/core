@@ -49,7 +49,7 @@ defmodule Brain.Filter.Complementary do
     {:noreply, %{state | roll_offset: value}}
   end
 
-  def update(gyroscope, accelerometer) do
+  def update(gyroscope, accelerometer, elapsed_time) do
     GenServer.call(__MODULE__, {:update, gyroscope, accelerometer})
   end
 

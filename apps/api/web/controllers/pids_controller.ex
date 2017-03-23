@@ -1,7 +1,7 @@
 defmodule Api.PIDsController do
   use Api.Web, :controller
 
-  @pids [Brain.PitchRatePIDController, Brain.RollRatePIDController, Brain.YawRatePIDController]
+  @pids [Brain.PitchRatePIDController, Brain.RollRatePIDController, Brain.YawRatePIDController, Brain.PitchAnglePIDController, Brain.RollAnglePIDController]
 
   def index(conn, _params) do
     pids = @pids |> Enum.reduce([], fn (pid_controller, acc) ->

@@ -5,8 +5,7 @@ defmodule Brain.Loop do
   alias Brain.{Receiver, PIDController, Mixer, Interpreter, BlackBox, Commander, Neopixel}
   alias Brain.Actuators.Motors
 
-  @filter        Application.get_env(:brain, :filter)
-  @sample_rate   Application.get_env(:brain, :sample_rate)
+  @filter Application.get_env(:brain, :filter)
 
   def init(_) do
     # TODO implement reverse on pids
@@ -21,13 +20,13 @@ defmodule Brain.Loop do
     {:ok, _calibration_data} = Gyroscope.calibrate
     Neopixel.show_ready()
 
-    :timer.send_after(@sample_rate, :loop)
     {:ok, %{
       complete_last_loop_duration: nil,
       last_end_timestamp: nil,
+      last_filter_update_timestamp: nil,
       armed: false,
       mode: :rate
-    }}
+    }, 0}
   end
 
   def start_link do
@@ -35,73 +34,84 @@ defmodule Brain.Loop do
     GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
-  def handle_info(:loop, state) do
+  def handle_info(:timeout, state) do
     start_timestamp = :os.system_time(:milli_seconds)
-    {:ok, gyroscope}       = Gyroscope.read()
-    {:ok, accelerometer}   = Accelerometer.read()
-    {:ok, channels}        = Receiver.channels()
+    #
+    # Reads
+    #
+    {:ok, gyroscope}     = Gyroscope.read()
+    {:ok, accelerometer} = Accelerometer.read()
+    {:ok, channels}      = Receiver.channels()
 
-    delta_with_last_loop = case state[:last_end_timestamp] do
-      nil -> 0
-      _ -> start_timestamp - state[:last_end_timestamp]
+    #
+    # Interpretations
+    #
+    {:ok, auxiliaries} = Interpreter.auxiliaries(channels)
+    {delta_with_last_filter_update, last_filter_update_timestamp} = case {state[:last_filter_update_timestamp], :os.system_time(:milli_seconds)} do
+      {nil, new_timestamp}           -> {0, new_timestamp}
+      {old_timestamp, new_timestamp} -> {new_timestamp - old_timestamp, new_timestamp}
+    end
+    {:ok, complementary_axes}  = @filter.update(gyroscope, accelerometer, delta_with_last_filter_update)
+
+    #
+    # Computations
+    #
+    setpoints = case state[:mode] do
+      :rate ->
+        {:ok, rate_setpoints} = Interpreter.setpoints(:rate, channels)
+        [roll_rate: rate_setpoints[:roll], pitch_rate: rate_setpoints[:pitch], yaw_rate: rate_setpoints[:yaw], throttle_rate: rate_setpoints[:throttle]]
+      :angle ->
+        {:ok, angle_setpoints}     = Interpreter.setpoints(:angle, channels)
+        :ok                        = PIDController.update_setpoint(Brain.RollAnglePIDController, angle_setpoints[:roll])
+        {:ok, roll_rate_setpoint}  = PIDController.compute(Brain.RollAnglePIDController, complementary_axes[:roll])
+        :ok                        = PIDController.update_setpoint(Brain.PitchAnglePIDController, -angle_setpoints[:pitch])
+        {:ok, pitch_rate_setpoint} = PIDController.compute(Brain.PitchAnglePIDController, complementary_axes[:pitch])
+        [roll_rate: roll_rate_setpoint, pitch_rate: pitch_rate_setpoint, yaw_rate: angle_setpoints[:yaw], throttle_rate: angle_setpoints[:throttle]]
     end
 
-    {:ok, rate_setpoints} = Interpreter.setpoints(:rate, channels)
-    {:ok, auxiliaries}    = Interpreter.auxiliaries(channels)
-
-    {:ok, complementary_axes}  = @filter.update(gyroscope, accelerometer)
-
-    if state[:mode] == :rate do
-      roll_rate_setpoint    = rate_setpoints[:roll]
-      pitch_rate_setpoint   = rate_setpoints[:pitch]
-      angle_setpoints       = nil
-    else
-      {:ok, angle_setpoints}     = Interpreter.setpoints(:angle, channels)
-      :ok                        = PIDController.update_setpoint(Brain.RollAnglePIDController, angle_setpoints[:roll])
-      {:ok, roll_rate_setpoint}  = PIDController.compute(Brain.RollAnglePIDController, complementary_axes[:roll])
-      :ok                        = PIDController.update_setpoint(Brain.PitchAnglePIDController, -angle_setpoints[:pitch])
-      {:ok, pitch_rate_setpoint} = PIDController.compute(Brain.PitchAnglePIDController, complementary_axes[:pitch])
-    end
-
-    yaw_rate_setpoint = rate_setpoints[:yaw]
-
-    :ok          = PIDController.update_setpoint(Brain.RollRatePIDController, roll_rate_setpoint)
+    :ok          = PIDController.update_setpoint(Brain.RollRatePIDController, setpoints[:roll_rate])
     {:ok, roll}  = PIDController.compute(Brain.RollRatePIDController, gyroscope[:y])
 
-    :ok          = PIDController.update_setpoint(Brain.PitchRatePIDController, pitch_rate_setpoint)
+    :ok          = PIDController.update_setpoint(Brain.PitchRatePIDController, setpoints[:pitch_rate])
     {:ok, pitch} = PIDController.compute(Brain.PitchRatePIDController, -gyroscope[:x])
 
-    :ok          = PIDController.update_setpoint(Brain.YawRatePIDController, yaw_rate_setpoint)
+    :ok          = PIDController.update_setpoint(Brain.YawRatePIDController, setpoints[:yaw_rate])
     {:ok, yaw}   = PIDController.compute(Brain.YawRatePIDController, -gyroscope[:z])
 
-    throttle     = rate_setpoints[:throttle]
+    {:ok, distribution} = Mixer.distribute(setpoints[:throttle_rate], roll, pitch, yaw)
 
-    {:ok, distribution} = Mixer.distribute(throttle, roll, pitch, yaw)
-
+    #
+    # Actuations
+    #
     if state[:armed] == true, do: Motors.throttles(distribution)
+    state = %{state | armed: toggle_motors(auxiliaries[:armed], state[:armed], setpoints[:throttle_rate])}
+    state = %{state | mode: toggle_flight_mode(auxiliaries[:mode], state[:mode])}
 
-    state = %{state | armed: toggle_motors(auxiliaries[:armed], state[:armed], rate_setpoints[:throttle])}
-    # state = %{state | mode: toggle_flight_mode(auxiliaries[:mode], state[:mode])}
-
-    # Status
+    #
+    # Logging
+    #
     :ok = BlackBox.update_status(:armed, state[:armed])
     :ok = BlackBox.update_status(:flight_mode, auxiliaries[:mode])
-    # Times
     end_timestamp = :os.system_time(:milli_seconds)
     new_state     = Map.merge(state, %{
-      complete_last_loop_duration: end_timestamp - start_timestamp,
-      last_end_timestamp: end_timestamp
+      complete_last_loop_duration:  end_timestamp - start_timestamp,
+      last_end_timestamp:           end_timestamp,
+      last_filter_update_timestamp: last_filter_update_timestamp
     })
-    trace(new_state, %{gyroscope: gyroscope, accelerometer: accelerometer}, complementary_axes, delta_with_last_loop)
-    :timer.send_after(@sample_rate, :loop)
-    {:noreply, new_state}
+    delta_with_last_loop = case state[:last_end_timestamp] do
+      nil       -> 0
+      timestamp -> start_timestamp - timestamp
+    end
+    trace(new_state, delta_with_last_loop, delta_with_last_filter_update)
+    {:noreply, new_state, 0}
   end
 
 
-  def trace(state, sensors, complementary_axes, delta_with_last_loop) do
+  def trace(state, delta_with_last_loop, delta_with_last_filter_update) do
     data = %{
-      complete_last_loop_duration: state[:complete_last_loop_duration],
-      delta_with_last_loop: delta_with_last_loop
+      complete_last_loop_duration:   state[:complete_last_loop_duration],
+      delta_with_last_loop:          delta_with_last_loop,
+      delta_with_last_filter_update: delta_with_last_filter_update
     }
     BlackBox.trace(__MODULE__, Process.info(self())[:registered_name], data)
   end

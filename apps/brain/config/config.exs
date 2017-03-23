@@ -6,7 +6,7 @@ config :nerves, :firmware,
 config :nerves_interim_wifi,
   regulatory_domain: "US"
 
-config :logger, 
+config :logger,
   backends: [Brain.ChannelLoggerBackend, :console],
   level: :debug
 
