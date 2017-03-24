@@ -35,6 +35,7 @@
   "nerves_toolchain_ctng": {:hex, :nerves_toolchain_ctng, "0.8.0", "6dff7ed51e1711c5f4da3d559bc528a8265e3dd950dda95f4d6832aed9dbe320", [:mix], []},
   "nerves_uart": {:git, "https://github.com/nerves-project/nerves_uart.git", "4761d35cc63b7708cd947d56e57393358d26f60f", []},
   "nerves_wpa_supplicant": {:hex, :nerves_wpa_supplicant, "0.2.3", "2666b21bf0868f0d3b127930c3bacf59b178a0d015d308ae3985dcb7c1595870", [:make, :mix], [{:elixir_make, "~> 0.3", [hex: :elixir_make, optional: false]}]},
+  "persistent_storage": {:git, "https://github.com/cellulose/persistent_storage.git", "e2a7895685378ae78d8fa26fd9d7bd3af30e256e", []},
   "phoenix": {:hex, :phoenix, "1.2.1", "6dc592249ab73c67575769765b66ad164ad25d83defa3492dc6ae269bd2a68ab", [:mix], [{:cowboy, "~> 1.0", [hex: :cowboy, optional: true]}, {:phoenix_pubsub, "~> 1.0", [hex: :phoenix_pubsub, optional: false]}, {:plug, "~> 1.1", [hex: :plug, optional: false]}, {:poison, "~> 1.5 or ~> 2.0", [hex: :poison, optional: false]}]},
   "phoenix_html": {:hex, :phoenix_html, "2.9.3", "1b5a2122cbf743aa242f54dced8a4f1cc778b8bd304f4b4c0043a6250c58e258", [:mix], [{:plug, "~> 1.0", [hex: :plug, optional: false]}]},
   "phoenix_live_reload": {:hex, :phoenix_live_reload, "1.0.8", "4333f9c74190f485a74866beff2f9304f069d53f047f5fbb0fb8d1ee4c495f73", [:mix], [{:fs, "~> 0.9.1", [hex: :fs, optional: false]}, {:phoenix, "~> 1.0 or ~> 1.2-rc", [hex: :phoenix, optional: false]}]},

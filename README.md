@@ -1,4 +1,4 @@
-![Elicopter Core](https://dl.dropboxusercontent.com/u/99900536/elicopter_core_logo_small.png)
+![Elicopter Core](logo.png)
 =========
 
 Elicopter Core aims to be a resilient and future proof flight controller.
