@@ -8,7 +8,7 @@ defmodule Brain.Mixfile do
       app: :brain,
       version: "0.1.0",
       target: @target,
-      archives: [nerves_bootstrap: "~> 0.2.1"],
+      archives: [nerves_bootstrap: "~> 0.3.1"],
       deps_path: "../../deps/#{@target}",
       build_path: "../../_build/#{@target}",
       config_path: "../../config/config.exs",
@@ -24,8 +24,7 @@ defmodule Brain.Mixfile do
   def application do
     [
       mod: {Brain, []},
-      applications: applications(Mix.env),
-      included_applications: [:nerves_interim_wifi]
+      applications: applications(Mix.env)
     ]
   end
 

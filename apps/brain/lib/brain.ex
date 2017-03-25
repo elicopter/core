@@ -73,7 +73,7 @@ defmodule Brain do
 
   def advertise_ssdp do
     name = Application.get_env(:brain, :name)
-    Nerves.SSDPServer.publish(name, "elicopter",[
+    {:ok, _name} = Nerves.SSDPServer.publish(name, "elicopter",[
       port: Application.get_env(:api, Api.Endpoint)[:http][:port]
     ])
   end
