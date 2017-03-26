@@ -88,4 +88,39 @@ config :brain, Drivers.IBus,
   bus: :uart,
   bus_name: "ttyUSB0"
 
+config :brain, Brain.RollRatePIDController,
+  kp: 1,
+  ki: 0,
+  kd: 0,
+  minimum_output: -500,
+  maximum_output: 500
+
+config :brain, Brain.PitchRatePIDController,
+  kp: 1,
+  ki: 0,
+  kd: 0,
+  minimum_output: -500,
+  maximum_output: 500
+
+config :brain, Brain.YawRatePIDController,
+  kp: 1,
+  ki: 0,
+  kd: 0,
+  minimum_output: -500,
+  maximum_output: 500
+
+config :brain, Brain.RollAnglePIDController,
+  kp: 1,
+  ki: 0,
+  kd: 0,
+  minimum_output: -400,
+  maximum_output: 400
+
+config :brain, Brain.PitchAnglePIDController,
+  kp: 1,
+  ki: 0,
+  kd: 0,
+  minimum_output: -400,
+  maximum_output: 400
+
 import_config "#{Mix.env}.exs"
