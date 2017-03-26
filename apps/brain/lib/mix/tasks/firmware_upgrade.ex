@@ -1,15 +1,20 @@
-defmodule Mix.Tasks.Firmware.Update do
+defmodule Mix.Tasks.Firmware.Upgrade do
   use Mix.Task
   require Logger
   def run(_) do
     {:ok, _pid}       = HTTPoison.start
     {:ok, _pid}       = Nerves.SSDPClient.start(nil, nil)
-    {:ok, elicopters} = discover()
-    # Need to handle multiple nodes
-    {elicopter_name, elicopter_info} = elicopters |> List.first
-    Logger.info("Found #{elicopter_name} at #{elicopter_info[:host]}.")
+    host = case System.get_env("ELICOPTER_REMOTE_HOST") do
+      nil ->
+        {:ok, elicopters} = discover()
+        # Need to handle multiple nodes
+        {elicopter_name, elicopter_info} = elicopters |> List.first
+        Logger.info("Found #{elicopter_name} at #{elicopter_info[:host]}.")
+        elicopter_info[:host]
+      host -> host
+    end
     build()
-    upload(elicopter_info[:host])
+    upload(host)
     Logger.info("Firmware updated!")
   end
 
