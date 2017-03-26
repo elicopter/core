@@ -2,13 +2,11 @@ defmodule Brain.Filter.Complementary do
   require Logger
   alias Brain.BlackBox
 
-  @pi          3.14159265359
-  @sample_rate Application.get_env(:brain, :sample_rate)
+  @pi 3.14159265359
 
   def init(_) do
     {:ok,
       %{
-        sample_rate: @sample_rate,
         roll: 0,
         pitch: 0,
         yaw: 0,
@@ -22,13 +20,14 @@ defmodule Brain.Filter.Complementary do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
-  def handle_call({:update, gyroscope_data, accelerometer_data}, _from, state) do
-    pitch_accelerometer = :math.atan2(accelerometer_data[:y], accelerometer_data[:z]) * 180 / @pi
-    roll_accelerometer  = :math.atan2(-accelerometer_data[:x], accelerometer_data[:z]) * 180 / @pi
-    pitch_gyroscope     = state[:pitch] + (gyroscope_data[:x] * (state[:sample_rate] / 1000))
-    roll_gyroscope      = state[:roll] + (gyroscope_data[:y] * (state[:sample_rate] / 1000))
-    yaw_gyroscope       = state[:yaw] + (gyroscope_data[:z] * (state[:sample_rate] / 1000))
-    new_state           = %{
+  def handle_call({:update, gyroscope_data, accelerometer_data, sample_rate}, _from, state) do
+    sample_rate_in_seconds = sample_rate / 1000
+    pitch_accelerometer    = :math.atan2(accelerometer_data[:y], accelerometer_data[:z]) * 180 / @pi
+    roll_accelerometer     = :math.atan2(-accelerometer_data[:x], accelerometer_data[:z]) * 180 / @pi
+    pitch_gyroscope        = state[:pitch] + (gyroscope_data[:x] * sample_rate_in_seconds)
+    roll_gyroscope         = state[:roll] + (gyroscope_data[:y] * sample_rate_in_seconds)
+    yaw_gyroscope          = state[:yaw] + (gyroscope_data[:z] * sample_rate_in_seconds)
+    new_state              = %{
       roll: (roll_gyroscope * state[:alpha] + roll_accelerometer * (1- state[:alpha])),
       pitch: (pitch_gyroscope * state[:alpha] + pitch_accelerometer * (1- state[:alpha])),
       yaw: yaw_gyroscope
@@ -49,12 +48,8 @@ defmodule Brain.Filter.Complementary do
     {:noreply, %{state | roll_offset: value}}
   end
 
-  def update(gyroscope, accelerometer, elapsed_time) do
-    GenServer.call(__MODULE__, {:update, gyroscope, accelerometer})
-  end
-
-  def offset(axis, value) do
-    GenServer.cast(__MODULE__, {:offset, axis, value})
+  def update(gyroscope, accelerometer, sample_rate) do
+    GenServer.call(__MODULE__, {:update, gyroscope, accelerometer, sample_rate})
   end
 
   defp trace(_state, data) do

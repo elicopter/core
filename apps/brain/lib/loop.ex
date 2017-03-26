@@ -8,14 +8,6 @@ defmodule Brain.Loop do
   @filter Application.get_env(:brain, :filter)
 
   def init(_) do
-    # TODO implement reverse on pids
-    :ok = PIDController.configure(Brain.RollRatePIDController, {1, 0, 0, -500, 500})
-    :ok = PIDController.configure(Brain.PitchRatePIDController, {1, 0, 0, -500, 500})
-    :ok = PIDController.configure(Brain.YawRatePIDController, {1, 0, 0, -500, 500})
-
-    :ok = PIDController.configure(Brain.RollAnglePIDController, {1, 0.2, 0, -400, 400})
-    :ok = PIDController.configure(Brain.PitchAnglePIDController, {1, 0.2, 0, -400, 400})
-
     Neopixel.show_calibrate()
     {:ok, _calibration_data} = Gyroscope.calibrate
     Neopixel.show_ready()
@@ -51,32 +43,26 @@ defmodule Brain.Loop do
       {nil, new_timestamp}           -> {0, new_timestamp}
       {old_timestamp, new_timestamp} -> {new_timestamp - old_timestamp, new_timestamp}
     end
-    {:ok, complementary_axes}  = @filter.update(gyroscope, accelerometer, delta_with_last_filter_update)
+    {:ok, complementary_axes}  = @filter.update(gyroscope, accelerometer, max(1, delta_with_last_filter_update))
 
     #
     # Computations
     #
-    setpoints = case state[:mode] do
+    sample_rate = max(1, delta_with_last_filter_update) # TMP
+    setpoints   = case state[:mode] do
       :rate ->
         {:ok, rate_setpoints} = Interpreter.setpoints(:rate, channels)
         [roll_rate: rate_setpoints[:roll], pitch_rate: rate_setpoints[:pitch], yaw_rate: rate_setpoints[:yaw], throttle_rate: rate_setpoints[:throttle]]
       :angle ->
         {:ok, angle_setpoints}     = Interpreter.setpoints(:angle, channels)
-        :ok                        = PIDController.update_setpoint(Brain.RollAnglePIDController, angle_setpoints[:roll])
-        {:ok, roll_rate_setpoint}  = PIDController.compute(Brain.RollAnglePIDController, complementary_axes[:roll])
-        :ok                        = PIDController.update_setpoint(Brain.PitchAnglePIDController, -angle_setpoints[:pitch])
-        {:ok, pitch_rate_setpoint} = PIDController.compute(Brain.PitchAnglePIDController, complementary_axes[:pitch])
+        {:ok, roll_rate_setpoint}  = PIDController.compute(Brain.RollAnglePIDController, complementary_axes[:roll], angle_setpoints[:roll], sample_rate)
+        {:ok, pitch_rate_setpoint} = PIDController.compute(Brain.PitchAnglePIDController, complementary_axes[:pitch], -angle_setpoints[:pitch], sample_rate)
         [roll_rate: roll_rate_setpoint, pitch_rate: pitch_rate_setpoint, yaw_rate: angle_setpoints[:yaw], throttle_rate: angle_setpoints[:throttle]]
     end
 
-    :ok          = PIDController.update_setpoint(Brain.RollRatePIDController, setpoints[:roll_rate])
-    {:ok, roll}  = PIDController.compute(Brain.RollRatePIDController, gyroscope[:y])
-
-    :ok          = PIDController.update_setpoint(Brain.PitchRatePIDController, setpoints[:pitch_rate])
-    {:ok, pitch} = PIDController.compute(Brain.PitchRatePIDController, -gyroscope[:x])
-
-    :ok          = PIDController.update_setpoint(Brain.YawRatePIDController, setpoints[:yaw_rate])
-    {:ok, yaw}   = PIDController.compute(Brain.YawRatePIDController, -gyroscope[:z])
+    {:ok, roll}  = PIDController.compute(Brain.RollRatePIDController, gyroscope[:y], setpoints[:roll_rate], sample_rate)
+    {:ok, pitch} = PIDController.compute(Brain.PitchRatePIDController, -gyroscope[:x], setpoints[:pitch_rate], sample_rate)
+    {:ok, yaw}   = PIDController.compute(Brain.YawRatePIDController, -gyroscope[:z], setpoints[:yaw_rate], sample_rate)
 
     {:ok, distribution} = Mixer.distribute(setpoints[:throttle_rate], roll, pitch, yaw)
 
