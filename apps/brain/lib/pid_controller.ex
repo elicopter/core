@@ -8,7 +8,6 @@ defmodule Brain.PIDController do
     IO.inspect configuration
     {:ok, Map.merge(configuration,
       %{
-        sample_rate: @sample_rate,
         last_input: 0,
         integrative_term: 0,
         setpoint: 0,
@@ -49,7 +48,7 @@ defmodule Brain.PIDController do
     output = min(output, state[:maximum_output])
     output = max(output, state[:minimum_output])
 
-    trace(state, error, output, proportional_term, integrative_term, derivative_term)
+    trace(state, error, output, proportional_term, integrative_term, derivative_term, setpoint)
 
     {:reply, {:ok, output}, Map.merge(state, %{
       integrative_term: integrative_term,
@@ -103,7 +102,7 @@ defmodule Brain.PIDController do
     {:noreply, Map.merge(state, new_state)}
   end
 
-  defp trace(state, error, output, proportional_term, integrative_term, derivative_term) do
+  defp trace(state, error, output, proportional_term, integrative_term, derivative_term, setpoint) do
     data = %{
       kp: state[:kp],
       ki: state[:ki],
@@ -111,6 +110,7 @@ defmodule Brain.PIDController do
       proportional_term: proportional_term,
       integrative_term: integrative_term,
       derivative_term: derivative_term,
+      setpoint: setpoint,
       error: error,
       output: output
     }

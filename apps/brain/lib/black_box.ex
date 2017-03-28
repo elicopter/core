@@ -7,7 +7,7 @@ defmodule Brain.BlackBox do
   @flush_interval Application.get_env(:brain, Brain.BlackBox)[:flush_interval]
 
   def init(_) do
-    :timer.send_after(10, :send_last_event)
+    :timer.send_after(50, :send_last_event)
     :timer.send_interval(1000, :send_status)
     :erlang.process_flag(:priority, :low)
     {:ok, %{events_buffer: %{}, status: %{}}}

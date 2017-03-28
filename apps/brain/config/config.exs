@@ -103,21 +103,21 @@ config :brain, Brain.PitchRatePIDController,
   maximum_output: 500
 
 config :brain, Brain.YawRatePIDController,
-  kp: 1,
+  kp: 1.1,
   ki: 0,
   kd: 0,
   minimum_output: -500,
   maximum_output: 500
 
 config :brain, Brain.RollAnglePIDController,
-  kp: 1,
+  kp: 0.7,
   ki: 0,
   kd: 0,
   minimum_output: -400,
   maximum_output: 400
 
 config :brain, Brain.PitchAnglePIDController,
-  kp: 1,
+  kp: 0.7,
   ki: 0,
   kd: 0,
   minimum_output: -400,

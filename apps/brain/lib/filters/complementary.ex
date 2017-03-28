@@ -10,7 +10,7 @@ defmodule Brain.Filter.Complementary do
         roll: 0,
         pitch: 0,
         yaw: 0,
-        alpha: 0.99
+        alpha: 0.995
       }
     }
   end
@@ -23,7 +23,7 @@ defmodule Brain.Filter.Complementary do
   def handle_call({:update, gyroscope_data, accelerometer_data, sample_rate}, _from, state) do
     sample_rate_in_seconds = sample_rate / 1000
     pitch_accelerometer    = :math.atan2(accelerometer_data[:y], accelerometer_data[:z]) * 180 / @pi
-    roll_accelerometer     = :math.atan2(-accelerometer_data[:x], accelerometer_data[:z]) * 180 / @pi
+    roll_accelerometer     = (:math.atan2(-accelerometer_data[:x], accelerometer_data[:z]) * 180 / @pi)  - 2.9
     pitch_gyroscope        = state[:pitch] + (gyroscope_data[:x] * sample_rate_in_seconds)
     roll_gyroscope         = state[:roll] + (gyroscope_data[:y] * sample_rate_in_seconds)
     yaw_gyroscope          = state[:yaw] + (gyroscope_data[:z] * sample_rate_in_seconds)

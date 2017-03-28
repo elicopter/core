@@ -11,7 +11,7 @@ defmodule Brain.Loop do
     Neopixel.show_calibrate()
     {:ok, _calibration_data} = Gyroscope.calibrate
     Neopixel.show_ready()
-
+    :erlang.process_flag(:priority, :high)
     {:ok, %{
       complete_last_loop_duration: nil,
       last_end_timestamp: nil,
@@ -43,6 +43,7 @@ defmodule Brain.Loop do
       {nil, new_timestamp}           -> {0, new_timestamp}
       {old_timestamp, new_timestamp} -> {new_timestamp - old_timestamp, new_timestamp}
     end
+    delta_with_last_filter_update = 9 # Fix for testing purpose
     {:ok, complementary_axes}  = @filter.update(gyroscope, accelerometer, max(1, delta_with_last_filter_update))
 
     #
