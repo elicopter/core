@@ -27,6 +27,7 @@ defmodule Brain.Loop do
   end
 
   def handle_info(:timeout, state) do
+    :ok = BlackBox.start_loop
     start_timestamp = :os.system_time(:milli_seconds)
     #
     # Reads

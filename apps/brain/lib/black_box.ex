@@ -3,26 +3,36 @@ defmodule Brain.BlackBox do
   require Logger
   require Poison
 
-  @events_buffer_limit Application.get_env(:brain, Brain.BlackBox)[:buffer_limit]
-  @flush_interval Application.get_env(:brain, Brain.BlackBox)[:flush_interval]
+  @loops_buffer_limit Application.get_env(:brain, Brain.BlackBox)[:loops_buffer_limit]
+  @send_loop_interval Application.get_env(:brain, Brain.BlackBox)[:send_loop_interval]
 
   def init(_) do
-    :timer.send_after(50, :send_last_event)
+    :timer.send_after(10, :send_last_loop)
     :timer.send_interval(1000, :send_status)
     :erlang.process_flag(:priority, :low)
-    {:ok, %{events_buffer: %{}, status: %{}}}
+    {:ok, %{loops_buffer: [], status: %{}}}
   end
 
-  def start_link() do
+  def start_link do
     Logger.debug "Starting #{__MODULE__}..."
     GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
-  def handle_info(:send_last_event, state) do
-    Enum.each(state[:events_buffer], fn({key, data}) ->
-      :ok = Api.Endpoint.broadcast! "black_box:#{key}", "data", data |> List.first
+  def handle_info(:send_last_loop, %{loops_buffer: []} = state) do
+    :timer.send_after(@send_loop_interval, :send_last_loop)
+    {:noreply, state}
+  end
+
+  def handle_info(:send_last_loop, %{loops_buffer: [_current_loop | nil]} = state) do
+    :timer.send_after(@send_loop_interval, :send_last_loop)
+    {:noreply, state}
+  end
+
+  def handle_info(:send_last_loop, %{loops_buffer: [_current_loop | [last_loop | _]]} = state) do
+    Enum.each(last_loop, fn({key, data}) ->
+      :ok = Api.Endpoint.broadcast! "black_box:#{key}", "data", data
     end)
-    :timer.send_after(@flush_interval, :send_last_event)
+    :timer.send_after(@send_loop_interval, :send_last_loop)
     {:noreply, state}
   end
 
@@ -33,24 +43,26 @@ defmodule Brain.BlackBox do
     {:noreply, state}
   end
 
-  def handle_cast({:trace, key, data}, %{events_buffer: events_buffer} = state) do
-    events = case events_buffer[key] do
-      nil -> [data]
-      events when length(events) < @events_buffer_limit ->
-        [data | events]
-      events when length(events) == @events_buffer_limit ->
-        events = List.delete_at(events, @events_buffer_limit - 1)
-        [data | events]
-    end
-    events_buffer = Map.put(events_buffer, key, events)
-    {:noreply, %{state | events_buffer: events_buffer}}
+  def handle_cast(:start_loop, %{loops_buffer: loops_buffer} = state) do
+    {:noreply, %{state | loops_buffer: [[] | loops_buffer]}}
   end
 
-  def handle_call(:snapshot, _from,  %{events_buffer: events_buffer} = state) do
-    last_events = Enum.map(events_buffer, fn({key, events}) ->
-      {key, List.first(events)}
-    end)
-    {:reply, {:ok, last_events}, state}
+  def handle_cast(:flush_loop, state) do
+    {:ok, state} = flush_loop(state)
+    {:noreply, state}
+  end
+
+  def handle_cast({:trace, key, data}, %{loops_buffer: loops_buffer} = state) do
+    [last_loop | previous_loops] = loops_buffer
+    last_loop                    = [{key, data} | last_loop]
+    if length(previous_loops) >= @loops_buffer_limit do
+      previous_loops = previous_loops |> Enum.drop(-1)
+    end
+    {:noreply, %{state | loops_buffer: [last_loop | previous_loops]}}
+  end
+
+  def handle_call(:snapshot, _from,  %{loops_buffer: [last_loop, _]} = state) do
+    {:reply, {:ok, last_loop}, state}
   end
 
   def handle_call(:status, _from, state) do
@@ -87,6 +99,14 @@ defmodule Brain.BlackBox do
 
   def update_status(key, value) do
     GenServer.cast(__MODULE__, {:update_status, key, value})
+  end
+
+  def start_loop do
+    GenServer.cast(__MODULE__, :start_loop)
+  end
+
+  def flush_loop do
+    GenServer.cast(__MODULE__, :flush_loop)
   end
 
   defp system_status do
@@ -127,5 +147,19 @@ defmodule Brain.BlackBox do
     process_name = "#{process_name}"
     process_name |> String.contains?("Brain")
   end
-end
 
+  defp flush_loop(state) do
+    file_path = build_loop_file_path()
+    with {:ok, file} <- File.open(file_path, [:write, :utf8]),
+      :ok            <- IO.write(file, state[:current_loop]) do
+        {:ok, %{state | current_loop: []}}
+    end
+  end
+
+  defp build_loop_file_path do
+    {uptime, _} = :erlang.statistics(:wall_clock)
+    root_path   = Application.get_env(:brain, :storage)[:root_path]
+    file_path   = root_path <> "/loop_" <> uptime <> ".csv"
+    {:ok, file_path}
+  end
+end

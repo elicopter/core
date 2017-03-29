@@ -20,8 +20,8 @@ config :brain, :wifi,
 config :brain, :network, :both
 
 config :brain, Brain.BlackBox,
-  buffer_limit: 50,
-  flush_interval: 100
+  loops_buffer_limit: 1000,
+  send_loop_interval: 100
 
 config :brain, Brain.Neopixel,
   channel0: [pin: 18, count: 8]
