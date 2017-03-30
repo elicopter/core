@@ -11,7 +11,7 @@ defmodule Brain do
     children = [
       worker(Task, [fn -> init_kernel_modules() end], restart: :transient, id: Nerves.Init.KernelModules),
       worker(Task, [fn -> start_network() end], restart: :transient, id: Brain.Network),
-      supervisor(Brain.Storage, []),
+      supervisor(Brain.Memory, []),
       supervisor(Brain.Sensors.Supervisor, []),
       supervisor(Brain.Actuators.Supervisor, []),
       supervisor(Drivers.Supervisor, [Drivers.IBus, Application.get_env(:brain, Drivers.IBus)], [id: Drivers.IBus]),

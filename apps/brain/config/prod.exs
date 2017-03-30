@@ -1,6 +1,6 @@
 use Mix.Config
 
-config :brain, :storage,
+config :brain, Brain.Memory,
   root_path: "/root"
 
 config :brain, :loop,

@@ -2,7 +2,7 @@ use Mix.Config
 
 config :brain, :network, :none
 
-config :brain, :storage,
+config :brain, Brain.Memory,
   root_path: "./tmp"
 
 config :brain, :loop,

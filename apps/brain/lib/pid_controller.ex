@@ -1,7 +1,7 @@
 defmodule Brain.PIDController do
   use GenServer
   require Logger
-  alias Brain.{ BlackBox, Storage }
+  alias Brain.{ BlackBox, Memory }
 
   def init(_) do
     {:ok, configuration} = load_configuration()
@@ -139,7 +139,7 @@ defmodule Brain.PIDController do
 
   defp load_configuration do
     process_name  = Process.info(self())[:registered_name]
-    configuration = case Storage.retreive do
+    configuration = case Memory.retreive do
       {:ok, nil} ->
         Logger.debug("#{process_name} loaded default configuration.")
         Application.get_env(:brain, process_name)
@@ -159,7 +159,7 @@ defmodule Brain.PIDController do
   end
 
   defp save_configuration(state) do
-    Storage.store(%{
+    Memory.store(%{
       kp: state[:kp],
       ki: state[:ki],
       kd: state[:kd],

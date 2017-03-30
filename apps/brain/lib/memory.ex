@@ -1,4 +1,4 @@
-defmodule Brain.Storage do
+defmodule Brain.Memory do
   use GenServer
   require Logger
 
@@ -45,7 +45,7 @@ defmodule Brain.Storage do
   end
 
   defp build_file_path_from_pid(pid) do
-    root_path       = Application.get_env(:brain, :storage)[:root_path]
+    root_path       = Application.get_env(:brain, __MODULE__)[:root_path]
     registered_name = Process.info(pid)[:registered_name] |> Macro.underscore |> String.replace("/", "__")
     file_path       = root_path <> "/" <> registered_name <> ".json"
     {:ok, file_path}
