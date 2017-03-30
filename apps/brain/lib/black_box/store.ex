@@ -3,7 +3,7 @@ defmodule Brain.BlackBox.Store do
   require Logger
 
   def init(_) do
-    :ok = remove_all_old_recorded_loops_files()
+    remove_all_old_recorded_loops_files()
     {:ok, %{recorded_loops_file: nil}}
   end
 
@@ -15,7 +15,7 @@ defmodule Brain.BlackBox.Store do
   def handle_cast({:start_recording_loops, last_loop}, state) do
     with {:ok, file_path} <- build_recorded_loops_file_path(),
          {:ok, file}      <- File.open(file_path, [:write]) do
-      headers = Enum.map(last_loop, fn({key, {data, module}}) ->
+      headers = Enum.map(last_loop, fn({_key, {data, module}}) ->
         {:ok, csv} = module.csv_headers(data)
         csv
       end)
@@ -49,12 +49,12 @@ defmodule Brain.BlackBox.Store do
   end
 
   defp remove_all_old_recorded_loops_files do
-    {:ok, _} = File.rm_rf(recorded_loops_path())
+    File.rm_rf(recorded_loops_path())
     File.mkdir(recorded_loops_path())
   end
 
   defp loop_to_csv(loop) do
-    Enum.map(loop, fn({key, {data, module}}) ->
+    Enum.map(loop, fn({_key, {data, module}}) ->
       {:ok, data_csv} = module.to_csv(data)
       data_csv
     end) |> Enum.join(",")

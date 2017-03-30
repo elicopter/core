@@ -13,10 +13,10 @@ defmodule Brain.Sensors.Gyroscope do
   end
 
   def handle_call(:calibrate, _from,  %{driver_pid: driver_pid} = state) do
-    {:reply, GenServer.call(driver_pid, :calibrate, 20000), state}
+    {:reply, GenServer.call(driver_pid, :calibrate, 20_000), state}
   end
 
   def calibrate do
-    GenServer.call(__MODULE__, :calibrate, 20000)
+    GenServer.call(__MODULE__, :calibrate, 20_000)
   end
 end

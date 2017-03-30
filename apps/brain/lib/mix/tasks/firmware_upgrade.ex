@@ -39,6 +39,10 @@ defmodule Mix.Tasks.Firmware.Upgrade do
     Logger.info("Upload firmware...")
     firmware_update_url = "http://#{host}:8988/firmware"
     firmware_path       = Path.absname("_images/rpi3/brain.fw")
-    HTTPoison.request!(:post, firmware_update_url, {:file, firmware_path}, [{"Content-Type", "application/x-firmware"}, {"X-Reboot", "true"}], [timeout: 30000, recv_timeout: 30000])
+    HTTPoison.request!(
+      :post, firmware_update_url, {:file, firmware_path},
+      [{"Content-Type", "application/x-firmware"}, {"X-Reboot", "true"}],
+      [timeout: 30_000, recv_timeout: 30_000]
+    )
   end
 end

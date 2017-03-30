@@ -3,12 +3,13 @@ defmodule Brain.BlackBox do
   require Logger
   require Poison
   use Brain.BlackBox.Status
+  alias Brain.BlackBox.Store
 
-  @loops_buffer_limit 100
-  @send_loop_interval Application.get_env(:brain, Brain.BlackBox)[:send_loop_interval]
+  @loops_buffer_limit Application.get_env(:brain, __MODULE__)[:loops_buffer_limit]
+  @send_loop_interval Application.get_env(:brain, __MODULE__)[:send_loop_interval]
 
   def init(_) do
-    {:ok, store_pid} = Brain.BlackBox.Store.start_link()
+    {:ok, store_pid} = Store.start_link()
     :timer.send_after(10, :send_last_loop)
     :timer.send_interval(2000, :flush_recorded_loops)
     :timer.send_interval(1000, :send_status)
@@ -96,7 +97,7 @@ defmodule Brain.BlackBox do
         {process_name |> Module.split |> List.last |> Macro.underscore, {data, module}}
     end
     [last_loop_events | previous_loops] = loops_buffer
-    last_loop                    = [event | last_loop_events]
+    last_loop                           = [event | last_loop_events]
     {:noreply, %{state | loops_buffer: [last_loop | previous_loops]}}
   end
 

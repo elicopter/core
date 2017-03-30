@@ -15,7 +15,7 @@ defmodule Drivers.PCA9685 do
   def init([bus_pid, configuration]) do
     frequency          = configuration[:frequency] || @default_frequency
     {:ok, prescale}    = set_prescale(bus_pid, frequency)
-    computed_frequency = 25000000 / (prescale * 4096)
+    computed_frequency = 25_000_000 / (prescale * 4096)
     {:ok, %State{
         bus_pid: bus_pid,
         computed_frequency: computed_frequency,
@@ -71,7 +71,7 @@ defmodule Drivers.PCA9685 do
 
   defp write_us(%State{computed_frequency: computed_frequency} = state, values) do
     values = Enum.map(values, fn value ->
-      (value / ((1 / computed_frequency) * 1000000)) * 4096
+      (value / ((1 / computed_frequency) * 1_000_000)) * 4096
     end)
     write(state, values)
   end

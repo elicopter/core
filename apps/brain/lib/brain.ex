@@ -1,7 +1,7 @@
 defmodule Brain do
   use Application
   require Logger
-  alias Brain.BlackBox
+  alias Brain.{ Receiver, Mixer, BlackBox, Loop, Memory, Interpreter, PIDController, Neopixel }
 
   @filter Application.get_env(:brain, :filter)
   @kernel_modules Mix.Project.config[:kernel_modules] || []
@@ -11,26 +11,26 @@ defmodule Brain do
     children = [
       worker(Task, [fn -> init_kernel_modules() end], restart: :transient, id: Nerves.Init.KernelModules),
       worker(Task, [fn -> start_network() end], restart: :transient, id: Brain.Network),
-      supervisor(Brain.Memory, []),
+      supervisor(Memory, []),
       supervisor(Brain.Sensors.Supervisor, []),
       supervisor(Brain.Actuators.Supervisor, []),
       supervisor(Drivers.Supervisor, [Drivers.IBus, Application.get_env(:brain, Drivers.IBus)], [id: Drivers.IBus]),
-      worker(Brain.Receiver, [Drivers.IBus]),
+      worker(Receiver, [Drivers.IBus]),
       worker(@filter, []),
 
-      worker(Brain.Neopixel, []),
-      worker(Brain.PIDController, [[name: Brain.RollRatePIDController]], [id: Brain.RollRatePIDController]),
-      worker(Brain.PIDController, [[name: Brain.PitchRatePIDController]], [id: Brain.PitchRatePIDController]),
-      worker(Brain.PIDController, [[name: Brain.YawRatePIDController]], [id: Brain.YawRatePIDController]),
-      worker(Brain.PIDController, [[name: Brain.PitchAnglePIDController]], [id: Brain.PitchAnglePIDController]),
-      worker(Brain.PIDController, [[name: Brain.RollAnglePIDController]], [id: Brain.RollAnglePIDController]),
+      worker(Neopixel, []),
+      worker(PIDController, [[name: Brain.RollRatePIDController]], [id: Brain.RollRatePIDController]),
+      worker(PIDController, [[name: Brain.PitchRatePIDController]], [id: Brain.PitchRatePIDController]),
+      worker(PIDController, [[name: Brain.YawRatePIDController]], [id: Brain.YawRatePIDController]),
+      worker(PIDController, [[name: Brain.PitchAnglePIDController]], [id: Brain.PitchAnglePIDController]),
+      worker(PIDController, [[name: Brain.RollAnglePIDController]], [id: Brain.RollAnglePIDController]),
 
-      worker(Brain.Interpreter, []),
-      worker(Brain.Mixer, []),
+      worker(Interpreter, []),
+      worker(Mixer, []),
 
-      worker(Brain.BlackBox, []),
+      worker(BlackBox, []),
 
-      worker(Brain.Loop, [])
+      worker(Loop, [])
     ]
     opts = [strategy: :one_for_one, name: Core.Supervisor]
     Supervisor.start_link(children, opts)

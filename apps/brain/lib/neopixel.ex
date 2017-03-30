@@ -1,6 +1,7 @@
 defmodule Brain.Neopixel do
   use GenServer
   require Logger
+  alias Nerves.Neopixel
 
   @configuration Application.get_env(:brain, __MODULE__)
 
@@ -16,7 +17,7 @@ defmodule Brain.Neopixel do
 
   def handle_cast(:calibrate, state) do
     data = List.duplicate({0, 0, 255}, 8)
-    Nerves.Neopixel.render(0, {50, data})
+    Neopixel.render(0, {50, data})
     {:noreply, state}
   end
 
@@ -24,13 +25,13 @@ defmodule Brain.Neopixel do
     # TODO: find why the pulse crash the http firmware update...
     # {:ok, pulse_spawned_pid} = pulse(0, @configuration[:channel0][:count], [color: {47, 86, 233}])
     data = List.duplicate({0, 255, 0}, 8)
-    Nerves.Neopixel.render(0, {50, data})
+    Neopixel.render(0, {50, data})
     {:noreply, state}
   end
 
   def handle_cast(:armed, %{pulse_spawned_pid: pulse_spawned_pid} = state) do
     data = List.duplicate({255, 0, 0}, 8)
-    Nerves.Neopixel.render(0, {50, data})
+    Neopixel.render(0, {50, data})
     state = case pulse_spawned_pid do
       nil -> state
       pid ->
@@ -58,7 +59,7 @@ defmodule Brain.Neopixel do
   end
 
   defp pulse_indef(channel, data, brightness, direction) do
-    Nerves.Neopixel.render(channel, {brightness, data})
+    Neopixel.render(channel, {brightness, data})
     :timer.sleep(5)
     brightness =
       if direction == :up, do: brightness + 1, else: brightness - 1
