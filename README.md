@@ -34,8 +34,8 @@ iex -S mix
 
 * Configure your WIFI network:
 ```
-export ELICOPTER_CORE_WIFI_SSID=*Your SSID*
-export ELICOPTER_CORE_WIFI_PASSWORD=*Your Network Password*
+export ELICOPTER_WIFI_SSID=*Your SSID*
+export ELICOPTER_WIFI_PASSWORD=*Your Network Password*
 ```
 
 > Note: WPA-PSK only.
@@ -61,9 +61,9 @@ mkfs.ext4 /dev/DEVICE4 -L DATA
 
 ### Network Firmware Update
 
-* Build and deploy the firmware directly on the flight controller:
+* Build and deploy the firmware directly through network:
 ```
-MIX_ENV=prod mix firmware.update
+MIX_ENV=prod mix firmware.upgrade
 ```
 
 > Note: The flight controller needs to be already started and connected to the network.
