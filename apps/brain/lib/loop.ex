@@ -50,6 +50,7 @@ defmodule Brain.Loop do
     #
     # Computations
     #
+    sample_rate = max(1, delta_with_last_filter_update) # TODO: improve sample rate computation
     setpoints   = case state[:mode] do
       :rate ->
         {:ok, rate_setpoints} = Interpreter.setpoints(:rate, channels)

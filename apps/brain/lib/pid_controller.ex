@@ -5,7 +5,6 @@ defmodule Brain.PIDController do
 
   def init(_) do
     {:ok, configuration} = load_configuration()
-    IO.inspect configuration
     {:ok, Map.merge(configuration,
       %{
         last_input: 0,
