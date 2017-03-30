@@ -120,6 +120,24 @@ defmodule Brain.Interpreter do
     BlackBox.trace(__MODULE__, Process.info(self())[:registered_name], data)
   end
 
+  def to_csv(data) do
+    csv = [
+      data[:setpoints] |> Map.values |> Enum.join(","),
+      # data[:channels] |> Map.value |> Enum.join(","),
+      data[:mode]
+    ] |> Enum.join(",")
+    {:ok, csv}
+  end
+
+  def csv_headers(data) do
+    csv = [
+      data[:setpoints] |> Enum.map(fn({key, _value}) -> key end) |> Enum.join(","),
+      # data[:channels] |> Map.keys |> Enum.join(","),
+      "mode"
+    ] |> Enum.join(",")
+    {:ok, csv}
+  end
+
   def setpoints(mode, channels) do
     GenServer.call(__MODULE__, {:setpoints, mode, channels})
   end

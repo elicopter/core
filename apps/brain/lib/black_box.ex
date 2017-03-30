@@ -2,15 +2,17 @@ defmodule Brain.BlackBox do
   use GenServer
   require Logger
   require Poison
+  use Brain.BlackBox.Status
 
-  @loops_buffer_limit Application.get_env(:brain, Brain.BlackBox)[:loops_buffer_limit]
+  @loops_buffer_limit 100
   @send_loop_interval Application.get_env(:brain, Brain.BlackBox)[:send_loop_interval]
 
   def init(_) do
+    {:ok, store_pid} = Brain.BlackBox.Store.start_link()
     :timer.send_after(10, :send_last_loop)
+    :timer.send_interval(2000, :flush_recorded_loops)
     :timer.send_interval(1000, :send_status)
-    :erlang.process_flag(:priority, :low)
-    {:ok, %{loops_buffer: [], status: %{}}}
+    {:ok, %{loops_buffer: [], status: %{}, loops_recording: false, store_pid: store_pid}}
   end
 
   def start_link do
@@ -23,13 +25,13 @@ defmodule Brain.BlackBox do
     {:noreply, state}
   end
 
-  def handle_info(:send_last_loop, %{loops_buffer: [_current_loop | nil]} = state) do
+  def handle_info(:send_last_loop, %{loops_buffer: [_current_loop]} = state) do
     :timer.send_after(@send_loop_interval, :send_last_loop)
     {:noreply, state}
   end
 
   def handle_info(:send_last_loop, %{loops_buffer: [_current_loop | [last_loop | _]]} = state) do
-    Enum.each(last_loop, fn({key, data}) ->
+    Enum.each(last_loop, fn({key, {data, module}}) ->
       :ok = Api.Endpoint.broadcast! "black_box:#{key}", "data", data
     end)
     :timer.send_after(@send_loop_interval, :send_last_loop)
@@ -43,21 +45,45 @@ defmodule Brain.BlackBox do
     {:noreply, state}
   end
 
-  def handle_cast(:start_loop, %{loops_buffer: loops_buffer} = state) do
-    {:noreply, %{state | loops_buffer: [[] | loops_buffer]}}
+  def handle_cast(:loop_starting, %{loops_buffer: loops_buffer} = state) do
+    {:noreply, %{state | loops_buffer: ([[] | loops_buffer])}}
   end
 
-  def handle_cast(:flush_loop, state) do
-    {:ok, state} = flush_loop(state)
+  def handle_info(:flush_recorded_loops, %{loops_recording: false, loops_buffer: loops_buffer} = state)
+  when length(loops_buffer) > @loops_buffer_limit do
+    [current_loop | previous_loops] = loops_buffer
+    loops_to_drop = length(loops_buffer) - @loops_buffer_limit
+    {:noreply, %{state | loops_buffer: [current_loop | previous_loops |> Enum.drop(-loops_to_drop)]}}
+  end
+
+  def handle_info(:flush_recorded_loops, %{loops_recording: true, store_pid: store_pid, loops_buffer: [current_loop | last_loops]} = state)
+  when length(last_loops) > @loops_buffer_limit do
+    :ok = GenServer.cast(store_pid, {:store_recorded_loops_in_csv, last_loops})
+    {:noreply, %{state | loops_buffer: [current_loop]}}
+  end
+  def handle_info(:flush_recorded_loops, state) do
     {:noreply, state}
   end
 
-  def handle_cast({:trace, key, data}, %{loops_buffer: loops_buffer} = state) do
+  def handle_cast(:stop_recording_loops, %{loops_recording: false} = state), do: {:noreply, state}
+  def handle_cast(:stop_recording_loops, %{loops_recording: true, store_pid: store_pid, loops_buffer: [current_loop | last_loops]} = state) do
+    Logger.info "#{__MODULE__} stopped recording loops..."
+    :ok = GenServer.cast(store_pid, {:store_recorded_loops_in_csv, last_loops})
+    :ok = GenServer.cast(store_pid, :stop_recording_loops)
+    {:noreply, %{%{state | loops_buffer: [current_loop]} | loops_recording: false}}
+  end
+
+  def handle_cast(:start_recording_loops, %{loops_recording: false, loops_buffer: loops_buffer, store_pid: store_pid} = state = state) do
+    Logger.info "#{__MODULE__} started recording loops..."
+    [current_loop | [last_loop | previous_loops]] = loops_buffer
+    :ok = GenServer.cast(store_pid, {:start_recording_loops, last_loop})
+    {:noreply, %{state | loops_recording: true}}
+  end
+  def handle_cast(:start_recording_loops, state), do: {:noreply, state}
+
+  def handle_cast({:trace, key, data, module}, %{loops_buffer: loops_buffer} = state) do
     [last_loop | previous_loops] = loops_buffer
-    last_loop                    = [{key, data} | last_loop]
-    if length(previous_loops) >= @loops_buffer_limit do
-      previous_loops = previous_loops |> Enum.drop(-1)
-    end
+    last_loop                    = [{key, {data, module}} | last_loop]
     {:noreply, %{state | loops_buffer: [last_loop | previous_loops]}}
   end
 
@@ -76,15 +102,15 @@ defmodule Brain.BlackBox do
   def trace(module, process_name, data) do
     event = case {module, process_name, data} do
       {Brain.Mixer, _process_name, data} ->
-        {:trace, :mixer, Enum.into(data, %{})}
+        {:trace, :mixer, Enum.into(data, %{}), module}
       {Brain.Interpreter, _process_name, data} ->
-        {:trace, :interpreter, data}
+        {:trace, :interpreter, data, module}
       {Brain.Filter.Complementary, _process_name, data} ->
-        {:trace, :filter, data}
+        {:trace, :filter, data, module}
       {Brain.Loop, _process_name, data} ->
-        {:trace, :loop, data}
+        {:trace, :loop, data, module}
       {_, process_name, data} ->
-        {:trace, process_name |> Module.split |> List.last |> Macro.underscore, data}
+        {:trace, process_name |> Module.split |> List.last |> Macro.underscore, data, module}
     end
     GenServer.cast(__MODULE__, event)
   end
@@ -101,65 +127,15 @@ defmodule Brain.BlackBox do
     GenServer.cast(__MODULE__, {:update_status, key, value})
   end
 
-  def start_loop do
-    GenServer.cast(__MODULE__, :start_loop)
+  def loop_starting do
+    GenServer.cast(__MODULE__, :loop_starting)
   end
 
-  def flush_loop do
-    GenServer.cast(__MODULE__, :flush_loop)
+  def stop_recording_loops do
+    GenServer.cast(__MODULE__, :stop_recording_loops)
   end
 
-  defp system_status do
-    {uptime, _} = :erlang.statistics(:wall_clock)
-    {:ok, %{
-      memory: :erlang.memory() |> Enum.into(%{}),
-      processes: processes(),
-      uptime: uptime
-    }}
-  end
-
-  defp status(%{status: status} = _state) do
-    with {:ok, system_status} <- system_status() do
-      {:ok, Map.merge(status, system_status)}
-    end
-  end
-
-  defp processes do
-    Process.list |> Enum.reduce([], fn(pid, acc) ->
-      process_info = Process.info(pid)
-      process_info = %{
-        name:               process_info[:registered_name],
-        stack_size:         process_info[:stack_size],
-        message_queue_size: process_info[:message_queue_len],
-        heap_size:          process_info[:heap_size],
-        memory:             process_info[:memory],
-        status:             process_info[:status]
-      }
-      case process_info[:name] do
-        name when is_atom(name) or is_binary(name) ->
-          [process_info | acc]
-        _ -> acc
-      end
-    end) |> Enum.filter(fn (process) -> process_selected?(process[:name]) end)
-  end
-
-  defp process_selected?(process_name) do
-    process_name = "#{process_name}"
-    process_name |> String.contains?("Brain")
-  end
-
-  defp flush_loop(state) do
-    file_path = build_loop_file_path()
-    with {:ok, file} <- File.open(file_path, [:write, :utf8]),
-      :ok            <- IO.write(file, state[:current_loop]) do
-        {:ok, %{state | current_loop: []}}
-    end
-  end
-
-  defp build_loop_file_path do
-    {uptime, _} = :erlang.statistics(:wall_clock)
-    root_path   = Application.get_env(:brain, :storage)[:root_path]
-    file_path   = root_path <> "/loop_" <> uptime <> ".csv"
-    {:ok, file_path}
+  def start_recording_loops do
+    GenServer.cast(__MODULE__, :start_recording_loops)
   end
 end

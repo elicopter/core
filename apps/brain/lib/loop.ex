@@ -6,6 +6,7 @@ defmodule Brain.Loop do
   alias Brain.Actuators.Motors
 
   @filter Application.get_env(:brain, :filter)
+  @loop_sleep Application.get_env(:brain, :loop)[:sleep]
 
   def init(_) do
     Neopixel.show_calibrate()
@@ -27,7 +28,7 @@ defmodule Brain.Loop do
   end
 
   def handle_info(:timeout, state) do
-    :ok = BlackBox.start_loop
+    :ok = BlackBox.loop_starting()
     start_timestamp = :os.system_time(:milli_seconds)
     #
     # Reads
@@ -71,7 +72,11 @@ defmodule Brain.Loop do
     #
     # Actuations
     #
-    if state[:armed] == true, do: Motors.throttles(distribution)
+    case state[:armed] do
+      true  -> Motors.throttles(distribution)
+      false -> Motors.throttles(["1": 0, "2": 0, "3": 0, "4": 0])
+    end
+
     state = %{state | armed: toggle_motors(auxiliaries[:armed], state[:armed], setpoints[:throttle_rate])}
     state = %{state | mode: toggle_flight_mode(auxiliaries[:mode], state[:mode])}
 
@@ -91,9 +96,8 @@ defmodule Brain.Loop do
       timestamp -> start_timestamp - timestamp
     end
     trace(new_state, delta_with_last_loop, delta_with_last_filter_update)
-    {:noreply, new_state, 0}
+    {:noreply, new_state, @loop_sleep}
   end
-
 
   def trace(state, delta_with_last_loop, delta_with_last_filter_update) do
     data = %{
@@ -104,17 +108,27 @@ defmodule Brain.Loop do
     BlackBox.trace(__MODULE__, Process.info(self())[:registered_name], data)
   end
 
+  def to_csv(data) do
+    {:ok, data |> Map.values |> Enum.join(",")}
+  end
+
+  def csv_headers(data) do
+    {:ok, data |> Map.keys |> Enum.join(",")}
+  end
+
   def toggle_motors(auxiliaries_armed, state_armed, throttle) do
     case {auxiliaries_armed, state_armed, throttle < 5} do
       {true, false, true} ->
         Motors.arm
         Logger.info("Motors armed.")
         Neopixel.show_armed()
+        BlackBox.start_recording_loops()
         true
       {false, true, _} ->
         Motors.disarm
         Logger.info("Motors disarmed.")
         Neopixel.show_ready()
+        BlackBox.stop_recording_loops()
         false
       _ ->
         state_armed

@@ -69,7 +69,10 @@ defmodule Brain do
 
   defp setup_wifi do
     wifi_configuration = Application.get_env(:brain, :wifi)
-    {:ok, _pid} = Nerves.InterimWiFi.setup(:wlan0, ssid: wifi_configuration[:ssid] , key_mgmt: :"WPA-PSK", psk: wifi_configuration[:password])
+    case Nerves.InterimWiFi.setup(:wlan0, ssid: wifi_configuration[:ssid] , key_mgmt: :"WPA-PSK", psk: wifi_configuration[:password]) do
+      {:ok, _pid}               -> Logger.debug("#{__MODULE__} wifi started.")
+      {:error, :already_added}  -> Logger.warn("#{__MODULE__} wifi already started.")
+    end
   end
 
   def advertise_ssdp do

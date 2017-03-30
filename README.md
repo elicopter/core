@@ -53,6 +53,12 @@ MIX_ENV=prod mix firmware
 mix firmware.burn
 ```
 
+* Initialize the custom partition (4) file system:
+```
+mkfs.ext4 /dev/DEVICE4 -L DATA
+```
+> Note: DEVICE should be something like sda, sdb, ...
+
 ### Network Firmware Update
 
 * Build and deploy the firmware directly on the flight controller:

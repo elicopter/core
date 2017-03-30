@@ -117,6 +117,14 @@ defmodule Brain.PIDController do
     BlackBox.trace(__MODULE__, Process.info(self())[:registered_name], data)
   end
 
+  def to_csv(data) do
+    {:ok, data |> Map.values |> Enum.join(",")}
+  end
+
+  def csv_headers(data) do
+    {:ok, data |> Map.keys |> Enum.join(",")}
+  end
+
   def compute(pid, input, setpoint, sample_rate) do
     GenServer.call(pid, {:compute, input, setpoint, sample_rate})
   end

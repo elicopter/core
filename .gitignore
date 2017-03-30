@@ -21,3 +21,4 @@ erl_crash.dump
 
 /tmp/**/*
 !/tmp/.gitkeep
+!/tmp/black_box/.gitkeep

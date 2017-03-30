@@ -1,7 +1,8 @@
 use Mix.Config
 
 config :nerves, :firmware,
-  rootfs_additions: "config/rootfs-additions"
+  rootfs_additions: "config/rootfs-additions",
+  fwup_conf: "config/rpi3/fwup.conf"
 
 config :nerves_interim_wifi,
   regulatory_domain: "US"
@@ -20,7 +21,7 @@ config :brain, :wifi,
 config :brain, :network, :both
 
 config :brain, Brain.BlackBox,
-  loops_buffer_limit: 1000,
+  loops_buffer_limit: 100,
   send_loop_interval: 100
 
 config :brain, Brain.Neopixel,

@@ -56,4 +56,11 @@ defmodule Brain.Filter.Complementary do
     BlackBox.trace(__MODULE__, Process.info(self())[:registered_name], data)
   end
 
+  def to_csv(data) do
+    {:ok, data |> Map.values |> Enum.join(",")}
+  end
+
+  def csv_headers(data) do
+    {:ok, data |> Map.keys |> Enum.join(",")}
+  end
 end

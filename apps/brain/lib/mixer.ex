@@ -27,6 +27,14 @@ defmodule Brain.Mixer do
     BlackBox.trace(__MODULE__, Process.info(self())[:registered_name], distribution)
   end
 
+  def to_csv(data) do
+    {:ok, data |> Map.values |> Enum.join(",")}
+  end
+
+  def csv_headers(data) do
+    {:ok, data |> Map.keys |> Enum.join(",")}
+  end
+
   def distribute(throttle, roll, pitch, yaw) do
     GenServer.call(__MODULE__, {:distribute, throttle, roll, pitch, yaw})
   end
