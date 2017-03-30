@@ -32,7 +32,7 @@ defmodule Brain.Mixfile do
     [
       {:api, in_umbrella: true},
       {:drivers, in_umbrella: true},
-      {:nerves, "~> 0.4.0"},
+      {:nerves, "~> 0.5.0"},
       {:nerves_uart, git: "https://github.com/nerves-project/nerves_uart.git"},
       {:nerves_interim_wifi, "~> 0.1.0"},
       {:nerves_networking, github: "nerves-project/nerves_networking"},
@@ -51,7 +51,7 @@ defmodule Brain.Mixfile do
   end
 
   def system(target) do
-    [{:"nerves_system_#{target}", ">= 0.0.0"}]
+    [{:"elicopter_system_#{target}", github: "elicopter/elicopter_system_#{target}"}]
   end
 
   def aliases do
