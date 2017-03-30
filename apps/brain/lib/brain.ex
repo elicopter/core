@@ -29,7 +29,6 @@ defmodule Brain do
       worker(Brain.Mixer, []),
 
       worker(Brain.BlackBox, []),
-      # worker(Commander, [:commander]),
 
       worker(Brain.Loop, [])
     ]

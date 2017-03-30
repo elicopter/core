@@ -75,15 +75,28 @@ defmodule Brain.BlackBox do
 
   def handle_cast(:start_recording_loops, %{loops_recording: false, loops_buffer: loops_buffer, store_pid: store_pid} = state = state) do
     Logger.info "#{__MODULE__} started recording loops..."
-    [current_loop | [last_loop | previous_loops]] = loops_buffer
+    [_current_loop | [last_loop | _previous_loops]] = loops_buffer
     :ok = GenServer.cast(store_pid, {:start_recording_loops, last_loop})
     {:noreply, %{state | loops_recording: true}}
   end
   def handle_cast(:start_recording_loops, state), do: {:noreply, state}
 
-  def handle_cast({:trace, key, data, module}, %{loops_buffer: loops_buffer} = state) do
-    [last_loop | previous_loops] = loops_buffer
-    last_loop                    = [{key, {data, module}} | last_loop]
+  def handle_cast({:trace, _key, _data, _module}, %{loops_buffer: []} = state), do: {:noreply, state}
+  def handle_cast({:trace, raw_event}, %{loops_buffer: loops_buffer} = state) do
+    event = case {module, process_name, data} = raw_event do
+      {Brain.Mixer, _process_name, data} ->
+        {:mixer, {Enum.into(data, %{}), module}}
+      {Brain.Interpreter, _process_name, data} ->
+        {:interpreter, {data, module}}
+      {Brain.Filter.Complementary, _process_name, data} ->
+        {:filter, {data, module}}
+      {Brain.Loop, {_process_name, data}} ->
+        {:loop, {data, module}}
+      {_, process_name, data} ->
+        {process_name |> Module.split |> List.last |> Macro.underscore, {data, module}}
+    end
+    [last_loop_events | previous_loops] = loops_buffer
+    last_loop                    = [event | last_loop_events]
     {:noreply, %{state | loops_buffer: [last_loop | previous_loops]}}
   end
 
@@ -100,19 +113,7 @@ defmodule Brain.BlackBox do
   end
 
   def trace(module, process_name, data) do
-    event = case {module, process_name, data} do
-      {Brain.Mixer, _process_name, data} ->
-        {:trace, :mixer, Enum.into(data, %{}), module}
-      {Brain.Interpreter, _process_name, data} ->
-        {:trace, :interpreter, data, module}
-      {Brain.Filter.Complementary, _process_name, data} ->
-        {:trace, :filter, data, module}
-      {Brain.Loop, _process_name, data} ->
-        {:trace, :loop, data, module}
-      {_, process_name, data} ->
-        {:trace, process_name |> Module.split |> List.last |> Macro.underscore, data, module}
-    end
-    GenServer.cast(__MODULE__, event)
+    GenServer.cast(__MODULE__, {:trace, {module, process_name, data}})
   end
 
   def snapshot do

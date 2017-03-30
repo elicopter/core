@@ -15,5 +15,7 @@ defmodule Api.Router do
 
     get "/snapshot", SnapshotController, :show
     get "/status", StatusController, :show
+
+    get "/*path", CatchAllController, :index
   end
 end

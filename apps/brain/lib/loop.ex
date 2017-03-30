@@ -45,13 +45,11 @@ defmodule Brain.Loop do
       {nil, new_timestamp}           -> {0, new_timestamp}
       {old_timestamp, new_timestamp} -> {new_timestamp - old_timestamp, new_timestamp}
     end
-    delta_with_last_filter_update = 9 # Fix for testing purpose
     {:ok, complementary_axes}  = @filter.update(gyroscope, accelerometer, max(1, delta_with_last_filter_update))
 
     #
     # Computations
     #
-    sample_rate = max(1, delta_with_last_filter_update) # TMP
     setpoints   = case state[:mode] do
       :rate ->
         {:ok, rate_setpoints} = Interpreter.setpoints(:rate, channels)
@@ -96,6 +94,7 @@ defmodule Brain.Loop do
       timestamp -> start_timestamp - timestamp
     end
     trace(new_state, delta_with_last_loop, delta_with_last_filter_update)
+    
     {:noreply, new_state, @loop_sleep}
   end
 
