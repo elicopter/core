@@ -8,7 +8,7 @@
   "cowlib": {:hex, :cowlib, "1.0.2", "9d769a1d062c9c3ac753096f868ca121e2730b9a377de23dec0f7e08b1df84ee", [:make], []},
   "credo": {:hex, :credo, "0.7.2", "850463f126c09227994967fdcf8b8ad7684ab220f7727c00bcafc0ac37bd3660", [:mix], [{:bunt, "~> 0.2.0", [hex: :bunt, optional: false]}]},
   "distillery": {:hex, :distillery, "1.3.1", "211231af29ea55c79143d601a2caaf5936cc7b99e73bef25d78a0ff7f321b7fe", [:mix], []},
-  "elicopter_system_rpi3": {:git, "https://github.com/elicopter/elicopter_system_rpi3.git", "572feedb2267f7ee35ffd5241c501b24fc61e7e5", []},
+  "elicopter_system_rpi3": {:git, "https://github.com/elicopter/elicopter_system_rpi3.git", "919f1e01e08fd1093ebbcfe12d4b1572da52ecd4", []},
   "elixir_ale": {:hex, :elixir_ale, "0.5.7", "f6b978dd30dc3ecf2b5feaef862d30873c6a6fdca41fc7f6bb743d6783b3fe4b", [:make, :mix], [{:elixir_make, "~> 0.4", [hex: :elixir_make, optional: false]}]},
   "elixir_make": {:hex, :elixir_make, "0.4.0", "992f38fabe705bb45821a728f20914c554b276838433349d4f2341f7a687cddf", [:mix], []},
   "exjsx": {:hex, :exjsx, "4.0.0", "60548841e0212df401e38e63c0078ec57b33e7ea49b032c796ccad8cde794b5c", [:mix], [{:jsx, "~> 2.8.0", [hex: :jsx, optional: false]}]},

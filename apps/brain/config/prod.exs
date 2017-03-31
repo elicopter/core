@@ -8,3 +8,6 @@ config :brain, :loop,
 
 config :brain, Brain.BlackBox,
   root_path: "/mnt/black_box"
+
+config :nerves_interim_wifi, :logger,
+  level: :warn

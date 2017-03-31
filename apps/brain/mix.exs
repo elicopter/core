@@ -35,6 +35,7 @@ defmodule Brain.Mixfile do
       {:nerves, "~> 0.5.0"},
       {:nerves_uart, git: "https://github.com/nerves-project/nerves_uart.git"},
       {:nerves_interim_wifi, github: "loicvigneron/nerves_interim_wifi", branch: "renew-no-matching-close"},
+      # {:nerves_interim_wifi, ">= 0.0.0" },
       {:nerves_networking, github: "nerves-project/nerves_networking"},
       {:elixir_ale, "0.5.7", only: [:prod]},
       {:apex, ">= 0.0.0"},

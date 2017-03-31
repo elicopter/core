@@ -7,14 +7,6 @@ Elicopter Core aims to be a resilient and future proof flight controller.
 
 ## Build From Sources
 
-* Define environment variable for custom Nerves System:
-
-```
-export NERVES_SYSTEM=*Path To Nerves System*
-export NERVES_SYSTEM_CACHE=none
-export NERVES_SYSTEM_COMPILER=local
-```
-
 * Build
 
 ```
@@ -38,7 +30,7 @@ export ELICOPTER_WIFI_SSID=*Your SSID*
 export ELICOPTER_WIFI_PASSWORD=*Your Network Password*
 ```
 
-> Note: WPA-PSK only.
+> Note: WPA-PSK only and you need to rebuild the firmware after changing those settings.
 
 ### SDCard
 

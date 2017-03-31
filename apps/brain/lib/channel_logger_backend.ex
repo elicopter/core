@@ -12,11 +12,15 @@ defmodule Brain.ChannelLoggerBackend do
       timestamp: Timex.now, #TODO: parse log timestamp
       message: message |> IO.iodata_to_binary
     }
-    with :ok <- Api.Endpoint.broadcast("logger:#{level |> Atom.to_string}", "data", payload) do
-    else {:error, error} ->
-        IO.puts "#{__MODULE__} Can't log to channel"
-        IO.inspect error
-        IO.inspect message
+    try do
+      with :ok <- Api.Endpoint.broadcast("logger:#{level |> Atom.to_string}", "data", payload) do
+      else {:error, error} ->
+          IO.puts "#{__MODULE__} Can't log to channel"
+          IO.inspect error
+          IO.inspect message
+      end
+    rescue
+      e in ArgumentError -> IO.puts "#{__MODULE__} Can't log to channel, PubSub may not be started yet."
     end
     {:ok, state}
   end
