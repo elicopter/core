@@ -17,13 +17,13 @@ defmodule Brain.Interpreter do
 
   @pitch_min_rate -200
   @pitch_max_rate 200
-  @pitch_min_angle -45
-  @pitch_max_angle 45
+  @pitch_min_angle -90
+  @pitch_max_angle 90
 
   @roll_min_rate -200
   @roll_max_rate 200
-  @roll_min_angle -45
-  @roll_max_angle 45
+  @roll_min_angle -90
+  @roll_max_angle 90
 
   @roll_channel 0
   @pitch_channel 1

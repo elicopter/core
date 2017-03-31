@@ -3,14 +3,18 @@ defmodule Brain.Filter.Complementary do
   alias Brain.BlackBox
 
   @pi 3.14159265359
+  @degrees_to_radians @pi/180
 
   def init(_) do
     {:ok,
       %{
         roll: 0,
         pitch: 0,
+        roll_offset: 1.79,
+        pitch_offset: -0.5,
         yaw: 0,
-        alpha: 0.995
+        alpha: 0.985,
+        first_loop: true
       }
     }
   end
@@ -20,18 +24,36 @@ defmodule Brain.Filter.Complementary do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
-  def handle_call({:update, gyroscope_data, accelerometer_data, sample_rate}, _from, state) do
-    sample_rate_in_seconds = sample_rate / 1000
-    pitch_accelerometer    = :math.atan2(accelerometer_data[:y], accelerometer_data[:z]) * 180 / @pi
-    roll_accelerometer     = (:math.atan2(-accelerometer_data[:x], accelerometer_data[:z]) * 180 / @pi)  - 2.9
-    pitch_gyroscope        = state[:pitch] + (gyroscope_data[:x] * sample_rate_in_seconds)
-    roll_gyroscope         = state[:roll] + (gyroscope_data[:y] * sample_rate_in_seconds)
-    yaw_gyroscope          = state[:yaw] + (gyroscope_data[:z] * sample_rate_in_seconds)
-    new_state              = %{
-      roll: (roll_gyroscope * state[:alpha] + roll_accelerometer * (1- state[:alpha])),
-      pitch: (pitch_gyroscope * state[:alpha] + pitch_accelerometer * (1- state[:alpha])),
-      yaw: yaw_gyroscope
-    }
+  def handle_call({:update, gyroscope_data, accelerometer_data, sample_rate}, _from, %{first_loop: first_loop} = state) do
+    sample_rate_in_seconds     = sample_rate / 1000
+    yawed_transfer             = :math.sin(gyroscope_data[:z] * @degrees_to_radians * sample_rate_in_seconds)
+    accelerometer_total_vector = :math.sqrt(:math.pow(accelerometer_data[:x], 2) + :math.pow(accelerometer_data[:y], 2) + :math.pow(accelerometer_data[:z], 2))
+
+    pitch_accelerometer = :math.asin(accelerometer_data[:y] / accelerometer_total_vector) * (1 / @degrees_to_radians) - state[:pitch_offset]
+    roll_accelerometer  = :math.asin(accelerometer_data[:x] / accelerometer_total_vector) * -(1 / @degrees_to_radians) - state[:roll_offset]
+
+    pitch_gyroscope = state[:pitch] + (gyroscope_data[:x] * sample_rate_in_seconds)
+    pitch_gyroscope = pitch_gyroscope + (pitch_gyroscope * yawed_transfer)
+
+    roll_gyroscope = state[:roll] + (gyroscope_data[:y] * sample_rate_in_seconds)
+    roll_gyroscope = roll_gyroscope + (roll_gyroscope * yawed_transfer)
+
+    new_state = case first_loop do
+      true ->
+        Logger.debug("#{__MODULE__} starts with roll: #{roll_accelerometer} and pitch #{pitch_accelerometer}.")
+        %{
+          roll: roll_accelerometer,
+          pitch: pitch_accelerometer,
+          yaw: 0,
+          first_loop: false
+        }
+      false ->
+        %{
+          roll: (roll_gyroscope * state[:alpha] + roll_accelerometer * (1- state[:alpha])),
+          pitch: (pitch_gyroscope * state[:alpha] + pitch_accelerometer * (1- state[:alpha])),
+          yaw: 0,
+        }
+    end
     trace(state, new_state)
     {:reply,
       {

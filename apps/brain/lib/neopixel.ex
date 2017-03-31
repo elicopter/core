@@ -21,6 +21,13 @@ defmodule Brain.Neopixel do
     {:noreply, state}
   end
 
+  def handle_cast(:compute_looptime, state) do
+    data = List.duplicate({255, 165, 0}, 8)
+    Neopixel.render(0, {50, data})
+    {:noreply, state}
+  end
+
+
   def handle_cast(:ready, state) do
     # TODO: find why the pulse crash the http firmware update...
     # {:ok, pulse_spawned_pid} = pulse(0, @configuration[:channel0][:count], [color: {47, 86, 233}])
@@ -76,5 +83,9 @@ defmodule Brain.Neopixel do
 
   def show_calibrate do
     GenServer.cast(__MODULE__, :calibrate)
+  end
+
+  def show_compute_looptime do
+    GenServer.cast(__MODULE__, :compute_looptime)
   end
 end

@@ -5,9 +5,9 @@ defmodule Drivers.LSM303DLHCAccelerometer do
   @ctrl_register_1 0x20
   @ctrl_register_4 0x23
   @ctrl_register_5 0x24
-  @sensitivity 0.001
+  @sensitivity 0.004
   @out_x_l_register 0x28
-  @fullscale_4g 0x10
+  @fullscale_8g 0x20
   @gravity 9.80665
 
   def init([bus_pid, configuration]) do
@@ -15,7 +15,7 @@ defmodule Drivers.LSM303DLHCAccelerometer do
     Process.sleep(100)
     i2c().write(bus_pid, <<@ctrl_register_1, @rate>>)
     Process.sleep(10)
-    i2c().write(bus_pid, <<@ctrl_register_4, @fullscale_4g>>)
+    i2c().write(bus_pid, <<@ctrl_register_4, @fullscale_8g>>)
     Process.sleep(100)
     validate_i2c_device!(bus_pid)
     {:ok, %State{bus_pid: bus_pid, configuration: configuration}}
@@ -36,7 +36,10 @@ defmodule Drivers.LSM303DLHCAccelerometer do
     data = %{
       x: (x >>> 4) * @sensitivity,
       y: (y >>> 4) * @sensitivity,
-      z: (z >>> 4) * @sensitivity
+      z: (z >>> 4) * @sensitivity,
+      raw_x: (x >>> 4),
+      raw_y: (y >>> 4),
+      raw_z: (z >>> 4)
     }
     {:reply, {:ok, data}, state}
   end

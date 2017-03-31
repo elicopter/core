@@ -46,6 +46,7 @@ defmodule Drivers.L3GD20H do
     state = Map.merge(state, default_calibration_data)
     {:ok, calibration_data} = calibrate(state)
     Logger.info "Calibration successful for #{__MODULE__}..."
+    IO.inspect calibration_data
     {:reply, {:ok, calibration_data}, Map.merge(state, calibration_data)}
   end
 
@@ -60,23 +61,31 @@ defmodule Drivers.L3GD20H do
           }
         }
       _ ->
-        {:ok, %{x: x, y: y, z: z}} = read(state)
+        {:ok, {x, y, z}} = raw_read(state)
         calibrate(state, calibration_reads_remaining - 1, [x | xs], [y | ys], [z | zs])
     end
   end
 
-  defp read(%State{bus_pid: bus_pid} = state) do
+  defp read(state) do
+    {:ok, {x, y, z}} = raw_read(state)
+    # unit: "degrees per second"
+    {:ok, %{
+      x: ((x - state.zero_rate_x_drift) * @sensitivity),
+      y: ((y - state.zero_rate_y_drift) * @sensitivity) ,
+      z: ((z - state.zero_rate_z_drift) * @sensitivity),
+      raw_x: (x - state.zero_rate_x_drift),
+      raw_y: (y - state.zero_rate_y_drift),
+      raw_z: (z - state.zero_rate_z_drift)
+    }}
+  end
+
+  defp raw_read(%State{bus_pid: bus_pid} = state) do
     i2c().write(bus_pid, <<@out_x_l_register ||| 0x80>>)
     raw_data = i2c().read(bus_pid, 6)
     <<x :: signed-16>> = binary_part(raw_data, 1, 1) <> binary_part(raw_data, 0, 1)
     <<y :: signed-16>> = binary_part(raw_data, 3, 1) <> binary_part(raw_data, 2, 1)
     <<z :: signed-16>> = binary_part(raw_data, 5, 1) <> binary_part(raw_data, 4, 1)
-    # unit: "degrees per second"
-    {:ok, %{
-      x: (x * @sensitivity) - state.zero_rate_x_drift,
-      y: (y * @sensitivity) - state.zero_rate_y_drift,
-      z: (z * @sensitivity) - state.zero_rate_z_drift
-    }}
+    {:ok, {x, y, z}}
   end
 
   defp validate_i2c_device!(bus_pid) do

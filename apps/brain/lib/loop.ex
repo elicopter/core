@@ -7,17 +7,20 @@ defmodule Brain.Loop do
 
   @filter Application.get_env(:brain, :filter)
   @loop_sleep Application.get_env(:brain, :loop)[:sleep]
+  @average_looptimes_required 500
 
   def init(_) do
+    :erlang.process_flag(:priority, :high)
     Neopixel.show_calibrate()
     {:ok, _calibration_data} = Gyroscope.calibrate
-    Neopixel.show_ready()
-    :erlang.process_flag(:priority, :high)
+    Neopixel.show_compute_looptime()
+    Process.sleep(2000)
     {:ok, %{
       complete_last_loop_duration: nil,
       last_end_timestamp: nil,
-      last_filter_update_timestamp: nil,
       armed: false,
+      looptimes: [],
+      average_looptime: -1,
       mode: :rate
     }, 0}
   end
@@ -41,16 +44,12 @@ defmodule Brain.Loop do
     # Interpretations
     #
     {:ok, auxiliaries} = Interpreter.auxiliaries(channels)
-    {delta_with_last_filter_update, last_filter_update_timestamp} = case {state[:last_filter_update_timestamp], :os.system_time(:milli_seconds)} do
-      {nil, new_timestamp}           -> {0, new_timestamp}
-      {old_timestamp, new_timestamp} -> {new_timestamp - old_timestamp, new_timestamp}
-    end
-    {:ok, complementary_axes}  = @filter.update(gyroscope, accelerometer, max(1, delta_with_last_filter_update))
+    {:ok, complementary_axes}  = @filter.update(gyroscope, accelerometer, max(1, state[:average_looptime]))
 
     #
     # Computations
     #
-    sample_rate = max(1, delta_with_last_filter_update) # TODO: improve sample rate computation
+    sample_rate = max(1, state[:average_looptime])
     setpoints   = case state[:mode] do
       :rate ->
         {:ok, rate_setpoints} = Interpreter.setpoints(:rate, channels)
@@ -76,34 +75,50 @@ defmodule Brain.Loop do
       false -> Motors.throttles(["1": 0, "2": 0, "3": 0, "4": 0])
     end
 
-    state = %{state | armed: toggle_motors(auxiliaries[:armed], state[:armed], setpoints[:throttle_rate])}
-    state = %{state | mode: toggle_flight_mode(auxiliaries[:mode], state[:mode])}
+    #
+    # Looptime
+    #
+
+    state = case {state[:average_looptime], length(state[:looptimes])}  do
+      {-1, looptimes_length} when looptimes_length < @average_looptimes_required ->
+        end_timestamp = :os.system_time(:milli_seconds)
+        complete_last_loop_duration = end_timestamp - start_timestamp
+        Map.merge(state, %{
+          complete_last_loop_duration:  complete_last_loop_duration,
+          last_end_timestamp:           end_timestamp,
+          looptimes:                    [complete_last_loop_duration | state[:looptimes]]
+        })
+      {-1, looptimes_length} when looptimes_length == @average_looptimes_required ->
+        end_timestamp = :os.system_time(:milli_seconds)
+        average_looptime = Enum.reduce(state[:looptimes], 0, fn(looptime, average_looptime) -> looptime + average_looptime end) / @average_looptimes_required
+        Neopixel.show_ready()
+        Logger.info("#{__MODULE__} average looptime computed: #{average_looptime}.")
+        Map.merge(state, %{
+          complete_last_loop_duration:  end_timestamp - start_timestamp,
+          last_end_timestamp:           end_timestamp,
+          average_looptime:             average_looptime
+        })
+      _ ->
+        end_timestamp = :os.system_time(:milli_seconds)
+        Map.merge(state, %{
+          complete_last_loop_duration:  end_timestamp - start_timestamp,
+          last_end_timestamp:           end_timestamp,
+          armed:                        toggle_motors(auxiliaries[:armed], state[:armed], setpoints[:throttle_rate]),
+          mode:                         toggle_flight_mode(auxiliaries[:mode], state[:mode])
+        })
+    end
 
     #
     # Logging
     #
-    :ok = BlackBox.update_status(:armed, state[:armed])
-    :ok = BlackBox.update_status(:flight_mode, auxiliaries[:mode])
-    end_timestamp = :os.system_time(:milli_seconds)
-    new_state     = Map.merge(state, %{
-      complete_last_loop_duration:  end_timestamp - start_timestamp,
-      last_end_timestamp:           end_timestamp,
-      last_filter_update_timestamp: last_filter_update_timestamp
-    })
-    delta_with_last_loop = case state[:last_end_timestamp] do
-      nil       -> 0
-      timestamp -> start_timestamp - timestamp
-    end
-    trace(new_state, delta_with_last_loop, delta_with_last_filter_update)
+    trace(state)
     
-    {:noreply, new_state, @loop_sleep}
+    {:noreply, state, @loop_sleep}
   end
 
-  def trace(state, delta_with_last_loop, delta_with_last_filter_update) do
+  def trace(state) do
     data = %{
-      complete_last_loop_duration:   state[:complete_last_loop_duration],
-      delta_with_last_loop:          delta_with_last_loop,
-      delta_with_last_filter_update: delta_with_last_filter_update
+      complete_last_loop_duration: state[:complete_last_loop_duration]
     }
     BlackBox.trace(__MODULE__, Process.info(self())[:registered_name], data)
   end
@@ -119,16 +134,23 @@ defmodule Brain.Loop do
   def toggle_motors(auxiliaries_armed, state_armed, throttle) do
     case {auxiliaries_armed, state_armed, throttle < 5} do
       {true, false, true} ->
+        :ok = GenServer.cast(Brain.RollAnglePIDController, :reset)
+        :ok = GenServer.cast(Brain.PitchAnglePIDController, :reset)
+        :ok = GenServer.cast(Brain.RollRatePIDController, :reset)
+        :ok = GenServer.cast(Brain.PitchRatePIDController, :reset)
+        :ok = GenServer.cast(Brain.YawRatePIDController, :reset)
         Motors.arm
         Logger.info("Motors armed.")
         Neopixel.show_armed()
         BlackBox.start_recording_loops()
+        :ok = BlackBox.update_status(:armed, true)
         true
       {false, true, _} ->
         Motors.disarm
         Logger.info("Motors disarmed.")
         Neopixel.show_ready()
         BlackBox.stop_recording_loops()
+        :ok = BlackBox.update_status(:armed, false)
         false
       _ ->
         state_armed
@@ -141,6 +163,7 @@ defmodule Brain.Loop do
         state_mode
       false ->
         Logger.info("Switch to #{auxiliaries_mode} mode.")
+        :ok = BlackBox.update_status(:flight_mode, auxiliaries_mode)
         auxiliaries_mode
     end
   end

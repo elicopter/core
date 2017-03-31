@@ -93,7 +93,7 @@ defmodule Brain.PIDController do
     {:noreply, state}
   end
 
-  def handle_cast({:reset, _}, state) do
+  def handle_cast(:reset, state) do
     new_state = %{
       integrative_term: 0
     }
