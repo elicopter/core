@@ -1,9 +1,9 @@
 ![Elicopter Core](logo.png)
 =========
 
-Elicopter Core aims to be a resilient and future proof flight controller.
+Elicopter Core aims to be a resilient and future proof flight controller. Initialy built for an educational purpose.
 
-> Note: Elicopter Core is still under heavy development.
+> Note: Elicopter Core is still under heavy development, don't hesitate to contact me for more information.
 
 ## Build From Sources
 
