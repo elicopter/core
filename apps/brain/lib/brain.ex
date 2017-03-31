@@ -63,14 +63,17 @@ defmodule Brain do
   end
 
   defp setup_ethernet do
-    {:ok, _pid} = Nerves.Networking.setup(:eth0)
+    case Nerves.Networking.setup(:eth0) do
+      {:ok, _pid}                       -> Logger.debug("#{__MODULE__} ethernet started.")
+      {:error, {:already_started,_pid}} -> Logger.warn("#{__MODULE__} ethernet already started.")
+    end
   end
 
   defp setup_wifi do
     wifi_configuration = Application.get_env(:brain, :wifi)
     case Nerves.InterimWiFi.setup(:wlan0, ssid: wifi_configuration[:ssid] , key_mgmt: :"WPA-PSK", psk: wifi_configuration[:password]) do
-      {:ok, _pid}               -> Logger.debug("#{__MODULE__} wifi started.")
-      {:error, :already_added}  -> Logger.warn("#{__MODULE__} wifi already started.")
+      {:ok, _pid}              -> Logger.debug("#{__MODULE__} wifi started.")
+      {:error, :already_added} -> Logger.warn("#{__MODULE__} wifi already started.")
     end
   end
 
