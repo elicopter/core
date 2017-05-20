@@ -1,7 +1,12 @@
 defmodule Brain.Mixfile do
   use Mix.Project
 
-  @target System.get_env("NERVES_TARGET") || "rpi3"
+  @target System.get_env("MIX_TARGET") || "rpi3"
+  Mix.shell.info([:green, """
+  Env
+    MIX_TARGET:   #{@target}
+    MIX_ENV:      #{Mix.env}
+  """, :reset])
 
   def project do
     [
@@ -15,7 +20,7 @@ defmodule Brain.Mixfile do
       lockfile: "../../mix.lock",
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
-      aliases: aliases(),
+      aliases: aliases(@target),
       deps: deps() ++ system(@target),
       kernel_modules: kernel_modules(@target, Mix.env)
     ]
@@ -24,7 +29,7 @@ defmodule Brain.Mixfile do
   def application do
     [
       mod: {Brain, []},
-      applications: applications(Mix.env)
+      applications: applications(@target)
     ]
   end
 
@@ -32,10 +37,9 @@ defmodule Brain.Mixfile do
     [
       {:api, in_umbrella: true},
       {:drivers, in_umbrella: true},
-      {:nerves, "~> 0.5.0"},
+      {:nerves, "~> 0.5.0", runtime: false},
       {:nerves_uart, git: "https://github.com/nerves-project/nerves_uart.git"},
       {:nerves_interim_wifi, github: "loicvigneron/nerves_interim_wifi", branch: "renew-no-matching-close"},
-      # {:nerves_interim_wifi, ">= 0.0.0" },
       {:nerves_networking, github: "nerves-project/nerves_networking"},
       {:elixir_ale, "0.5.7", only: [:prod]},
       {:apex, ">= 0.0.0"},
@@ -51,37 +55,39 @@ defmodule Brain.Mixfile do
     ]
   end
 
+  def system("host"), do: []
   def system(target) do
-    [{:"elicopter_system_#{target}", github: "elicopter/elicopter_system_#{target}"}]
+    [
+      {:"elicopter_system_#{target}", github: "elicopter/elicopter_system_#{target}"},
+      {:nerves, "~> 0.5.0", runtime: false}
+    ]
   end
 
-  def aliases do
+  def aliases("host"), do: []
+  def aliases(_target) do
     [
       "deps.precompile": ["nerves.precompile", "deps.precompile"],
       "deps.loadpaths":  ["deps.loadpaths", "nerves.loadpaths"]
     ]
   end
 
-  defp applications(:prod) do
-    [:nerves_interim_wifi, :elixir_ale | base_applications()]
-  end
+  defp applications("host"), do: base_applications()
 
-  defp applications(_) do
-    base_applications()
+  defp applications(_target) do
+    [:nerves_interim_wifi, :elixir_ale | base_applications()]
   end
 
   defp base_applications do
     [
-      :timex,
       :api,
+      :drivers,
+      :timex,
       :logger,
       :runtime_tools,
-      :nerves,
       :nerves_networking,
       :nerves_uart,
       :apex,
       :poison,
-      :drivers,
       :nerves_firmware_http,
       :nerves_neopixel,
       :nerves_ssdp_server
