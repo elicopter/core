@@ -5,6 +5,7 @@ defmodule Brain do
 
   @filter Application.get_env(:brain, :filter)
   @kernel_modules Mix.Project.config[:kernel_modules] || []
+  @interim_wifi Application.get_env(:brain, :interim_wifi)
 
   def start(_type, _args) do
     import Supervisor.Spec
@@ -69,9 +70,9 @@ defmodule Brain do
     end
   end
 
-  defp setup_wifi do
+  defp setup_wifi() do
     wifi_configuration = Application.get_env(:brain, :wifi)
-    case Nerves.InterimWiFi.setup(:wlan0, ssid: wifi_configuration[:ssid] , key_mgmt: :"WPA-PSK", psk: wifi_configuration[:password]) do
+    case @interim_wifi.setup(:wlan0, ssid: wifi_configuration[:ssid] , key_mgmt: :"WPA-PSK", psk: wifi_configuration[:password]) do
       {:ok, _pid}              -> Logger.debug("#{__MODULE__} wifi started.")
       {:error, :already_added} -> Logger.warn("#{__MODULE__} wifi already started.")
     end

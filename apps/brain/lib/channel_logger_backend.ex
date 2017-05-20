@@ -1,7 +1,5 @@
-
 defmodule Brain.ChannelLoggerBackend do
   use GenEvent
-  use Timex
 
   def handle_event(:flush, state) do
     {:ok, state}
@@ -9,7 +7,7 @@ defmodule Brain.ChannelLoggerBackend do
 
   def handle_event({level, _group_leader, {Logger, message, timestamp, _metadata}}, state) do
     payload = %{
-      timestamp: Timex.now, #TODO: parse log timestamp
+      timestamp: DateTime.utc_now(),
       message: message |> IO.iodata_to_binary
     }
     try do

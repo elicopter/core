@@ -124,4 +124,7 @@ config :brain, Brain.PitchAnglePIDController,
   minimum_output: -400,
   maximum_output: 400
 
+config :brain, :neopixel, Nerves.Neopixel
+config :brain, :interim_wifi, Nerves.InterimWiFi
+
 import_config "#{Mix.env}.exs"

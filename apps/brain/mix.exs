@@ -1,7 +1,7 @@
 defmodule Brain.Mixfile do
   use Mix.Project
 
-  @target System.get_env("MIX_TARGET") || "rpi3"
+  @target System.get_env("MIX_TARGET") || "host"
   Mix.shell.info([:green, """
   Env
     MIX_TARGET:   #{@target}
@@ -21,7 +21,7 @@ defmodule Brain.Mixfile do
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
       aliases: aliases(@target),
-      deps: deps() ++ system(@target),
+      deps: deps(@target),
       kernel_modules: kernel_modules(@target, Mix.env)
     ]
   end
@@ -33,33 +33,32 @@ defmodule Brain.Mixfile do
     ]
   end
 
-  def deps do
+  def deps("host"), do: base_deps()
+  def deps(target) do
+    [
+      {:"elicopter_system_#{target}", github: "elicopter/elicopter_system_#{target}"},
+      {:nerves_runtime, "~> 0.1.0"},
+      {:elixir_ale, "0.5.7"},
+      {:nerves_interim_wifi, github: "loicvigneron/nerves_interim_wifi", branch: "renew-no-matching-close"},
+      {:nerves_neopixel, github: "loicvigneron/nerves_neopixel", branch: "update-deps", submodules: true}
+    ] ++ base_deps()
+  end
+
+  def base_deps do
     [
       {:api, in_umbrella: true},
       {:drivers, in_umbrella: true},
       {:nerves, "~> 0.5.0", runtime: false},
-      {:nerves_uart, git: "https://github.com/nerves-project/nerves_uart.git"},
-      {:nerves_interim_wifi, github: "loicvigneron/nerves_interim_wifi", branch: "renew-no-matching-close"},
+      {:nerves_uart, "~> 0.1.0"},
       {:nerves_networking, github: "nerves-project/nerves_networking"},
-      {:elixir_ale, "0.5.7", only: [:prod]},
       {:apex, ">= 0.0.0"},
       {:combine, ">= 0.0.0"},
       {:poison, ">= 0.0.0"},
       {:credo, "~> 0.4", only: [:dev, :test]},
       {:nerves_firmware_http, github: "nerves-project/nerves_firmware_http"},
       {:httpoison, "~> 0.11.0"},
-      {:nerves_neopixel, github: "loicvigneron/nerves_neopixel", branch: "update-deps", submodules: true},
       {:nerves_ssdp_server, "~> 0.2.2"},
-      {:nerves_ssdp_client, "~> 0.1.3"},
-      {:timex, "> 0.0.0"}
-    ]
-  end
-
-  def system("host"), do: []
-  def system(target) do
-    [
-      {:"elicopter_system_#{target}", github: "elicopter/elicopter_system_#{target}"},
-      {:nerves, "~> 0.5.0", runtime: false}
+      {:nerves_ssdp_client, "~> 0.1.3"}
     ]
   end
 
@@ -74,14 +73,13 @@ defmodule Brain.Mixfile do
   defp applications("host"), do: base_applications()
 
   defp applications(_target) do
-    [:nerves_interim_wifi, :elixir_ale | base_applications()]
+    [:nerves_interim_wifi, :elixir_ale, :nerves_neopixel | base_applications()]
   end
 
   defp base_applications do
     [
       :api,
       :drivers,
-      :timex,
       :logger,
       :runtime_tools,
       :nerves_networking,
@@ -89,7 +87,6 @@ defmodule Brain.Mixfile do
       :apex,
       :poison,
       :nerves_firmware_http,
-      :nerves_neopixel,
       :nerves_ssdp_server
     ]
   end
