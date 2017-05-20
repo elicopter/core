@@ -4,9 +4,6 @@ config :nerves, :firmware,
   rootfs_additions: "config/rootfs-additions",
   fwup_conf: "config/rpi3/fwup.conf"
 
-config :nerves_interim_wifi,
-  regulatory_domain: "US"
-
 config :logger,
   backends: [Brain.ChannelLoggerBackend, :console],
   level: :debug

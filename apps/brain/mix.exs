@@ -50,7 +50,7 @@ defmodule Brain.Mixfile do
       {:drivers, in_umbrella: true},
       {:nerves, "~> 0.5.0", runtime: false},
       {:nerves_uart, "~> 0.1.0"},
-      {:nerves_networking, github: "nerves-project/nerves_networking"},
+      {:nerves_networking, github: "electricshaman/nerves_networking", branch: "cleanup-bare-functions"},
       {:apex, ">= 0.0.0"},
       {:combine, ">= 0.0.0"},
       {:poison, ">= 0.0.0"},

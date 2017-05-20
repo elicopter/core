@@ -11,3 +11,5 @@ config :brain, Brain.BlackBox,
 
 config :nerves_interim_wifi, :logger,
   level: :warn
+config :nerves_interim_wifi,
+  regulatory_domain: "US"
